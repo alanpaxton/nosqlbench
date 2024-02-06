@@ -1,0 +1,46 @@
+description: Adapted from a basic mongo insert and find.
+
+scenarios:
+  default:
+    rampup: run driver=existdb tags==block:"rampup.*", cycles===TEMPLATE(rampup-cycles,10) threads=auto errors=timer,warn
+    write: run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,10) threads=auto errors=timer,warn
+    read: run driver=existdb tags==block:"read.*", cycles===TEMPLATE(read-cycles,10) threads=auto errors=timer,warn
+
+bindings:
+  seq_key: Mod(<<keyCount:1000000>>); ToString();
+  seq_value: Mod(<<valueCount:1000000000>>); <<valueSizeDist:Hash()>>; ToString();
+  rw_key: <<keyDist:Uniform(0,1000000)>>; ToString();
+  rw_value: <<valDist:Uniform(0,1000000000)>>; <<valueSizeDist:Hash()>>; ToString();
+
+blocks:
+  rampup: 
+    params:
+      readPreference: primary      
+    ops:      
+      insert:  >2
+        {
+          insert: "<<collection:keyvalue>>",
+          documents: [ { _id: {seq_key}, value: {seq_value} } ]
+        }
+
+  read:
+    ops:     
+      find: >2
+        {
+          find: "<<collection:keyvalue>>",
+          filter: { _id: {rw_key} }
+        }
+    params:
+      ratio: <<read_ratio:1>>
+      readPreference: primary
+
+  write:
+    ops:     
+      insert: >2
+        {
+          insert: "<<collection:keyvalue>>",
+          documents: [ { _id: {rw_key}, value: {rw_value} } ]
+        }
+    params:
+      ratio: <<write_ratio:1>>
+      readPreference: primary

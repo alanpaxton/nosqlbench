@@ -64,6 +64,7 @@
         <module.adapter-kafka>adapter-kafka</module.adapter-kafka>
         <module.adapter-kafka>adapter-amqp</module.adapter-kafka>
         <module.adapter-jdbc>adapter-jdbc</module.adapter-jdbc>
+        <module.adapter-existdb>adapter-existdb</module.adapter-existdb>
 
         <!-- VIRTDATA MODULES -->
         <module.virtdata-api>virtdata-api</module.virtdata-api>
@@ -108,6 +109,7 @@
         <module>adapter-amqp</module>
         <module>adapter-jdbc</module>
         <module>adapter-pinecone</module>
+        <module>adapter-existdb</module>
 
         <!-- VIRTDATA MODULES -->
         <module>virtdata-api</module>

@@ -1,0 +1,20 @@
+bindings:
+  alpha: Identity()
+  beta: NumberNameToString()
+  gamma: Combinations('0-9A-F;0-9;A-Z;_;p;r;o;')
+  delta: WeightedStrings('one:1;six:6;three:3;')
+
+statements:
+  - foostmt:
+      stmt: "{alpha},{beta}\n"
+      parm1: pvalue1
+      bindings:
+        beta: Combinations('COMBINATIONS;')
+      tags:
+        tag1: tvalue1
+  - barstmt:
+      stmt: "{gamma},{delta}\n"
+      optype: setvar
+      parm3: 42
+      parm5: true
+      userid: 2342
