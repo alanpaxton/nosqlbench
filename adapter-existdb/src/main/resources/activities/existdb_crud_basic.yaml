@@ -1,0 +1,171 @@
+
+description: |
+  This workload emulates CRUD operations for eXist-db.
+  It generates a simple JSON document to be used for writes and updates.
+  It is adapter from the same worload for mongo db.
+  It's a counterpart of the Stargate's Documents API CRUD Basic workflow.
+
+scenarios:
+  default:
+    # schema:   run driver=existdb tags==block:"schema.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+
+    # different ops in the "write" schema occur on intervals, at the ratios declared by the ops
+    write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,15)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+    
+    # read:     run driver=existdb tags==block:"read.*",  cycles===TEMPLATE(read-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
+    # update:   run driver=existdb tags==block:"update.*", cycles===TEMPLATE(update-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
+    # delete:   run driver=existdb tags==block:"delete.*", cycles===TEMPLATE(delete-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
+
+bindings:
+
+  seq_key: Mod(<<docscount:10000000>>); ToString() -> String
+  random_key: Uniform(0,<<docscount:10000000>>); ToString() -> String
+
+  user_id: ToHashedUUID(); ToString() -> String
+  created_on: Uniform(1262304000,1577836800) -> long
+  gender: WeightedStrings('M:10;F:10;O:1')
+  full_name: FullNames()
+  married: ModuloToBoolean()
+  city: Cities()
+  country_code: CountryCodes()
+  lat: Uniform(-180d, 180d)
+  lng: Hash() -> long; Uniform(-180d, 180d)
+  friend_id: Add(-1); ToHashedUUID(); ToString() -> String
+
+blocks:
+
+  schema:
+    ops:
+      drop-collection:
+        xquery version "3.1";
+
+        import module namespace xmldb="http://exist-db.org/xquery/xmldb";
+
+        return
+          xmldb:remove("/db/testnb")
+
+      create-collection:
+        xquery version "3.1";
+
+        import module namespace xmldb="http://exist-db.org/xquery/xmldb";
+
+        let $create-collection := xmldb:create-collection("/db", "testnb")
+        let $create-collection-alpha := xmldb:create-collection("/db/testnb", "alpha")
+        let $create-collection-beta := xmldb:create-collection("/db/testnb", "beta")
+
+        return
+          ($create-collection-alpha, $create-collection-beta)
+
+  write:
+    ops:
+      write-node-alpha: >2
+        xquery version "3.1";
+
+        import module namespace xmldb="http://exist-db.org/xquery/xmldb";
+
+        declare namespace dasg = "https://dasg.ac.uk/corpus/";
+
+        let $log-in := xmldb:login("/db", "admin", "")
+
+        let $record :=
+          <text xmlns="https://dasg.ac.uk/corpus/" ref="https://dasg.ac.uk/corpus/_8-0" status="raw" seq="{seq_key}" user="{user_id}">
+            <pb n="5"/>
+            <h>
+              <w id="d1e1067" pos="ax" lemma="ro">RO</w>
+              <pc join="both">-</pc>
+              <w id="d1e1073" pos="vn" lemma="abair">RADH</w>
+            </h>
+            <p>
+              <w id="d1e1079" pos="p" lemma="bho">Bho</w>
+              <w id="d1e1082" pos="V" lemma="rach">chaidh</w>
+              <w id="d1e1085" pos="N" lemma="Hiort">Hiort</w>
+              <w id="d1e1088" pos="" lemma="fhàsachadh">fhàsachadh</w>
+              <w id="d1e1091" pos="p" lemma="an">ann an</w>
+            </p>
+          </text>
+
+        return
+          xmldb:store("/db/alan", "{random_key}", $record)
+
+      write-node-beta:
+        ratio: 4
+        op: >2
+          xquery version "3.1";
+
+          import module namespace xmldb="http://exist-db.org/xquery/xmldb";
+
+          declare namespace dasg = "https://dasg.ac.uk/corpus/";
+
+          let $record :=
+            <text xmlns="https://dasg.ac.uk/corpus/" ref="https://dasg.ac.uk/corpus/_8-0" status="raw" seq="{seq_key}" user="{user_id}">
+              <pb n="5"/>
+              <h>
+                <w id="d1e1067" pos="ax" lemma="ro">RO</w>
+                <pc join="both">-</pc>
+                <w id="d1e1073" pos="vn" lemma="abair">RADH</w>
+              </h>
+              <p>
+                <w id="d1e1079" pos="p" lemma="bho">air</w>
+              </p>
+            </text>
+
+          return
+            xmldb:store("/db/testnb", "{random_key}", $record)
+
+  read:
+    ops:
+      read-document: >2
+        {
+          find: "<<collection:crud_basic>>",
+          filter: { _id: "{random_key}" }
+        }        
+
+  update:
+    ops:
+      update-document: >2
+        {
+          update: "<<collection:crud_basic>>",
+          writeConcern: { w: "majority" },
+          updates: [
+            {
+              q: { _id: "{random_key}" },
+              u: {
+                "_id":          "{seq_key}",
+                "user_id":      "{user_id}",
+                "created_on":   {created_on},
+                "gender":       "{gender}",
+                "full_name":    "{full_name}",
+                "married":      {married},
+                "address": {
+                  "primary": {
+                    "city":   "{city}",
+                    "cc":     "{country_code}"
+                  },
+                  "secondary":  {}
+                },
+                "coordinates": [
+                  {lat},
+                  {lng}
+                ],
+                "children": [],
+                "friends": [
+                  "{friend_id}"
+                ],
+                "debt": null
+              }
+            }
+          ]
+        }        
+
+  delete:
+    ops:
+      delete-document: >2
+        {
+          delete: "<<collection:crud_basic>>",
+          deletes: [
+            {
+              q: { _id: "{seq_key}" },
+              limit: 1
+            }
+          ]
+        }

@@ -22,8 +22,20 @@ import io.nosqlbench.adapters.api.activityimpl.uniform.flowtypes.CycleOp;
 
 public class ExistDBOp implements CycleOp<Object> {
 
+    private final ExistDBClient client;
+
+    private final String collection;
+
+    private final String xquery;
+
+    public ExistDBOp(ExistDBClient client, String collection, String xquery) {
+        this.client = client;
+        this.collection = collection;
+        this.xquery = xquery;
+    }
+
     @Override
     public Object apply(long value) {
-        return null;
+        return client.executeQuery(xquery);
     }
 }

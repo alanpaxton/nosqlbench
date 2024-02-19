@@ -24,8 +24,11 @@ import io.nosqlbench.adapters.api.activityimpl.uniform.DriverAdapter;
 import io.nosqlbench.adapters.api.activityimpl.uniform.DriverSpaceCache;
 import io.nosqlbench.nb.annotations.Service;
 import io.nosqlbench.nb.api.components.core.NBComponent;
+import io.nosqlbench.nb.api.config.standard.NBConfigModel;
 import io.nosqlbench.nb.api.config.standard.NBConfiguration;
 import io.nosqlbench.nb.api.labels.NBLabels;
+
+import java.util.function.Function;
 
 @Service(value = DriverAdapter.class, selector = "existdb")
 public class ExistDBDriverAdapter extends BaseDriverAdapter<ExistDBOp, ExistDBSpace> {
@@ -39,6 +42,16 @@ public class ExistDBDriverAdapter extends BaseDriverAdapter<ExistDBOp, ExistDBSp
         DriverSpaceCache<? extends ExistDBSpace> spaceCache = getSpaceCache();
         NBConfiguration config = getConfiguration();
         return new ExistDBOpMapper(this, config, spaceCache);
+    }
+
+    @Override
+    public Function<String, ? extends ExistDBSpace> getSpaceInitializer(NBConfiguration cfg) {
+        return spaceName -> new ExistDBSpace(spaceName, cfg);
+    }
+
+    @Override
+    public NBConfigModel getConfigModel() {
+        return super.getConfigModel().add(ExistDBSpace.getConfigModel());
     }
 
 }

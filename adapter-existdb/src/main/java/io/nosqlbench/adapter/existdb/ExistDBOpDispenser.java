@@ -21,24 +21,34 @@ package io.nosqlbench.adapter.existdb;
 import io.nosqlbench.adapters.api.activityimpl.BaseOpDispenser;
 import io.nosqlbench.adapters.api.templating.ParsedOp;
 
+import java.util.Map;
 import java.util.function.LongFunction;
 
 public class ExistDBOpDispenser extends BaseOpDispenser<ExistDBOp, ExistDBSpace> {
 
     private final LongFunction<ExistDBOp> opFunc;
 
-    public ExistDBOpDispenser(ExistDBDriverAdapter adapter, LongFunction<ExistDBSpace> ctxF, ParsedOp op) {
+    public ExistDBOpDispenser(ExistDBDriverAdapter adapter, LongFunction<ExistDBSpace> contextFn, ParsedOp op) {
         super(adapter, op);
-        opFunc = getOpFunc(ctxF, op);
+        opFunc = createOpFunc(contextFn, op);
     }
 
-    private LongFunction<ExistDBOp> getOpFunc(LongFunction<ExistDBSpace> ctxF, ParsedOp op) {
+    private LongFunction<ExistDBOp> createOpFunc(LongFunction<ExistDBSpace> contextFn, ParsedOp op) {
 
-        return null;
+        LongFunction<?> payload = op.getAsRequiredFunction("stmt", Object.class);
+
+        final LongFunction<String> xqueryFn = l -> payload.apply(l).toString();
+
+        final LongFunction<String> collectionFn = op.getAsFunctionOr("collection", "db");
+
+        return l -> new ExistDBOp(
+            contextFn.apply(l).getClient(),
+            collectionFn.apply(l),
+            xqueryFn.apply(l));
     }
 
     @Override
     public ExistDBOp apply(long value) {
-        return null;
+        return opFunc.apply(value);
     }
 }
