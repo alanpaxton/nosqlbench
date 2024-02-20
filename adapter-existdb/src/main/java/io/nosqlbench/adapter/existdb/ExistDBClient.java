@@ -37,7 +37,7 @@ public class ExistDBClient {
 
     private final String closeErrorMessage;
 
-    Collection collection = null;
+    Collection xmldbCollection;
     XQueryService xQueryService;
 
     private synchronized void loadLibrary() {
@@ -88,15 +88,15 @@ public class ExistDBClient {
 
     }
 
-    public ExistDBClient(String connectionURL, String collectionName) {
+    public ExistDBClient(String connectionURL, String collection, String user, String pass) {
         loadLibrary();
 
         closeErrorMessage = "eXist-db connection threw exception connection (" +
-            connectionURL + ") and collection (" + collectionName + ")";
+            connectionURL + ") and collection (" + collection + ")";
 
         try {
-            collection = DatabaseManager.getCollection(connectionURL + "/" + collectionName);
-            xQueryService = (XQueryService) collection.getService("XQueryService", "1.0");
+            xmldbCollection = DatabaseManager.getCollection(connectionURL + "/" + collection);
+            xQueryService = (XQueryService) xmldbCollection.getService("XQueryService", "1.0");
             xQueryService.setProperty("indent", "yes");
 
         } catch (XMLDBException e) {
@@ -108,9 +108,9 @@ public class ExistDBClient {
 
     public void close() {
 
-        if (collection != null) {
+        if (xmldbCollection != null) {
             try {
-                collection.close();
+                xmldbCollection.close();
             } catch (XMLDBException e) {
                 logger.error(() -> "close() connection; " + closeErrorMessage + " : " + e);
                 throw new RuntimeException(e);

@@ -7,16 +7,21 @@ description: |
 
 scenarios:
   default:
-    # schema:   run driver=existdb tags==block:"schema.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+    #
+    schema:   run driver=existdb tags==block:"schema.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
     # different ops in the "write" schema occur on intervals, at the ratios declared by the ops
-    write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,15)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+    write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,1000000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc user="admin"
     
     # read:     run driver=existdb tags==block:"read.*",  cycles===TEMPLATE(read-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
     # update:   run driver=existdb tags==block:"update.*", cycles===TEMPLATE(update-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
     # delete:   run driver=existdb tags==block:"delete.*", cycles===TEMPLATE(delete-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
 
 bindings:
+
+  collection: FixedValue(<<collection:"db">>) -> String
+  user: FixedValue(<<user:"admin">>) -> String
+  pass: FixedValue(<<pass:"">>) -> String
 
   seq_key: Mod(<<docscount:10000000>>); ToString() -> String
   random_key: Uniform(0,<<docscount:10000000>>); ToString() -> String
@@ -41,13 +46,21 @@ blocks:
 
         import module namespace xmldb="http://exist-db.org/xquery/xmldb";
 
-        return
-          xmldb:remove("/db/testnb")
+        let $mylogin := xmldb:login("/{collection}", "{user}", "{pass}")
+
+        let $clean := if (fn:contains(xmldb:get-child-collections("/db"), "testnb"))
+            then
+                xmldb:remove("/db/testnb")
+            else
+                ()
+        return $clean
 
       create-collection:
         xquery version "3.1";
 
         import module namespace xmldb="http://exist-db.org/xquery/xmldb";
+
+        let $mylogin := xmldb:login("/{collection}", "{user}", "{pass}")
 
         let $create-collection := xmldb:create-collection("/db", "testnb")
         let $create-collection-alpha := xmldb:create-collection("/db/testnb", "alpha")
@@ -65,7 +78,7 @@ blocks:
 
         declare namespace dasg = "https://dasg.ac.uk/corpus/";
 
-        let $log-in := xmldb:login("/db", "admin", "")
+        let $mylogin := xmldb:login("/{collection}", "{user}", "{pass}")
 
         let $record :=
           <text xmlns="https://dasg.ac.uk/corpus/" ref="https://dasg.ac.uk/corpus/_8-0" status="raw" seq="{seq_key}" user="{user_id}">
@@ -85,7 +98,7 @@ blocks:
           </text>
 
         return
-          xmldb:store("/db/alan", "{random_key}", $record)
+          xmldb:store("/db/testnb/alpha", "{random_key}", $record)
 
       write-node-beta:
         ratio: 4
@@ -95,6 +108,8 @@ blocks:
           import module namespace xmldb="http://exist-db.org/xquery/xmldb";
 
           declare namespace dasg = "https://dasg.ac.uk/corpus/";
+
+          let $mylogin := xmldb:login("/{collection}", "{user}", "{pass}")
 
           let $record :=
             <text xmlns="https://dasg.ac.uk/corpus/" ref="https://dasg.ac.uk/corpus/_8-0" status="raw" seq="{seq_key}" user="{user_id}">
@@ -110,7 +125,7 @@ blocks:
             </text>
 
           return
-            xmldb:store("/db/testnb", "{random_key}", $record)
+            xmldb:store("/db/testnb/beta", "{random_key}", $record)
 
   read:
     ops:

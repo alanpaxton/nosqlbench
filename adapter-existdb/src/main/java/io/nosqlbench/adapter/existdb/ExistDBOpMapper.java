@@ -18,12 +18,14 @@ package io.nosqlbench.adapter.existdb;
  */
 
 
+import com.sun.jna.platform.unix.solaris.LibKstat;
 import io.nosqlbench.adapters.api.activityimpl.OpDispenser;
 import io.nosqlbench.adapters.api.activityimpl.OpMapper;
 import io.nosqlbench.adapters.api.activityimpl.uniform.DriverAdapter;
 import io.nosqlbench.adapters.api.activityimpl.uniform.DriverSpaceCache;
 import io.nosqlbench.adapters.api.templating.ParsedOp;
 import io.nosqlbench.nb.api.config.standard.NBConfiguration;
+import io.nosqlbench.nb.api.config.standard.Param;
 import io.nosqlbench.nb.api.errors.BasicError;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,6 +48,15 @@ public class ExistDBOpMapper implements OpMapper<ExistDBOp> {
         this.adapter = adapter;
     }
 
+    private <T> T getStaticConfigOrWarn(final ParsedOp op, final String name, final T defaultValue, Class<T> tClass) {
+
+        final var supplied = op.getOptionalStaticValue(name, tClass);
+        if (supplied.isEmpty()) {
+            logger.warn("op field '" + name + "' was not defined. Default being used is '" + defaultValue + "'");
+        }
+        return supplied.orElse(defaultValue);
+    }
+
     @Override
     public OpDispenser<? extends ExistDBOp> apply(ParsedOp op) {
 
@@ -58,14 +69,11 @@ public class ExistDBOpMapper implements OpMapper<ExistDBOp> {
             throw new BasicError("Must provide an endpoint value for use by the ExistDB adapter.");
         }
 
-        String collection = op.getStaticConfigOr("collection", "db");
+        String collection = getStaticConfigOrWarn(op,"collection", "db", String.class);
+        String user = getStaticConfigOrWarn(op, "user", "admin", String.class);
+        String pass = getStaticConfigOrWarn(op,"pass", "", String.class);
 
-        spaceCache.get(spaceFn.apply(0L)).createExistDBClient(connectionURL, collection);
-
-        Optional<LongFunction<String>> collectionFn = op.getAsOptionalFunction("collection");
-        if (collectionFn.isEmpty()) {
-            logger.warn("op field 'collection' was not defined");
-        }
+        spaceCache.get(spaceFn.apply(0L)).createExistDBClient(connectionURL, collection, user, pass);
 
         //TODO (AP) do we need to create more specialized dispensers, cf {@link MongoOpMapper}
         //TODO (AP) or is this adequate for now, until we hit a performance wall ?
