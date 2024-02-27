@@ -23,11 +23,11 @@ import io.nosqlbench.adapters.api.templating.ParsedOp;
 
 import java.util.function.LongFunction;
 
-public class ExistDBOpDispenserGenerator extends BaseOpDispenser<ExistDBOp, ExistDBSpace> {
+public class ExistDBGeneratorOpDispenser extends BaseOpDispenser<ExistDBOp, ExistDBSpace> {
 
     private final LongFunction<ExistDBGeneratorOp> opFunc;
 
-    public ExistDBOpDispenserGenerator(ExistDBDriverAdapter adapter, LongFunction<ExistDBSpace> contextFn, ParsedOp op) {
+    public ExistDBGeneratorOpDispenser(ExistDBDriverAdapter adapter, LongFunction<ExistDBSpace> contextFn, ParsedOp op) {
         super(adapter, op);
         opFunc = createOpFunc(contextFn, op);
     }
