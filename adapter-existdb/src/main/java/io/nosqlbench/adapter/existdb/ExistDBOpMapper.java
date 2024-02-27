@@ -18,19 +18,16 @@ package io.nosqlbench.adapter.existdb;
  */
 
 
-import com.sun.jna.platform.unix.solaris.LibKstat;
 import io.nosqlbench.adapters.api.activityimpl.OpDispenser;
 import io.nosqlbench.adapters.api.activityimpl.OpMapper;
-import io.nosqlbench.adapters.api.activityimpl.uniform.DriverAdapter;
 import io.nosqlbench.adapters.api.activityimpl.uniform.DriverSpaceCache;
 import io.nosqlbench.adapters.api.templating.ParsedOp;
 import io.nosqlbench.nb.api.config.standard.NBConfiguration;
-import io.nosqlbench.nb.api.config.standard.Param;
 import io.nosqlbench.nb.api.errors.BasicError;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Optional;
+import java.util.*;
 import java.util.function.LongFunction;
 
 public class ExistDBOpMapper implements OpMapper<ExistDBOp> {
@@ -75,9 +72,39 @@ public class ExistDBOpMapper implements OpMapper<ExistDBOp> {
 
         spaceCache.get(spaceFn.apply(0L)).createExistDBClient(connectionURL, collection, user, pass);
 
-        //TODO (AP) do we need to create more specialized dispensers, cf {@link MongoOpMapper}
-        //TODO (AP) or is this adequate for now, until we hit a performance wall ?
-        return new ExistDBOpDispenser(adapter, contextFn, op);
+        String command = op.getStaticConfigOr("command", "query");
+        LongFunction<String> four = op.getAsRequiredFunction("four");
+        var example = four.apply(0);
+        var fourR = op.getAsRequiredFunction("four", String.class);
+        var fourRV = fourR.apply(0);
+        var thirdlyR = op.getAsRequiredFunction("thirdly", Map.class);
+        var thirdlyRV = thirdlyR.apply(0);
+
+        var more = op.getAsFunctionOr("more", null);
+        var moreV = more.apply(0);
+        var moreR = op.getAsRequiredFunction("more", List.class);
+        var moreRV = moreR.apply(0);
+        var undef1 = op.getAsFunctionOr("undef", "forty-two");
+        var undef1V = undef1.apply(0);
+        var otherwiseR = op.getAsRequiredFunction("otherwise", Map.class);
+        var otherwiseRV = otherwiseR.apply(0);
+
+        var orelseR = op.getAsRequiredFunction("orelse", Long.class);
+        var orelseRV = orelseR.apply(0);
+
+        var stmt = op.getAsRequiredFunction("stmt", Object.class);
+
+        switch (command) {
+            //TODO (AP) define and implement other types of command
+            case "generate":
+                return new ExistDBOpDispenserGenerator(adapter, contextFn, op);
+            case "query":
+            default:
+                // default is to submit an xquery "query"
+                return new ExistDBOpDispenserQuery(adapter, contextFn, op);
+
+        }
+
     }
 }
 

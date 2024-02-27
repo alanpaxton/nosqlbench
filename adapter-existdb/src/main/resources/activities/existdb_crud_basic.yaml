@@ -11,11 +11,20 @@ scenarios:
     schema:   run driver=existdb tags==block:"schema.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
     # different ops in the "write" schema occur on intervals, at the ratios declared by the ops
-    write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,1000000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc user="admin"
+    write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,100000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
     
     # read:     run driver=existdb tags==block:"read.*",  cycles===TEMPLATE(read-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
     # update:   run driver=existdb tags==block:"update.*", cycles===TEMPLATE(update-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
     # delete:   run driver=existdb tags==block:"delete.*", cycles===TEMPLATE(delete-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
+ 
+  create:
+    schema:   run driver=existdb tags==block:"schema.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+
+  debugstdout:
+    dbgwrite:    run driver=stdout tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10)) seq=interval threads=auto errors=timer,warn
+
+  debugexist:
+    dbgwrite:    run driver=existdb tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
 bindings:
 
@@ -36,6 +45,12 @@ bindings:
   lat: Uniform(-180d, 180d)
   lng: Hash() -> long; Uniform(-180d, 180d)
   friend_id: Add(-1); ToHashedUUID(); ToString() -> String
+
+  # debugging / testing
+  test_map: MapSizedStepped(Zipf(100,2), NumberNameToString(), NumberNameToString())
+  test_list: ListSizedStepped(HashInterval(3,7),HashInterval(10,20))
+  test_list2: ListSizedStepped(Id()),Id())
+  test_zipf: Zipf(1000,2)
 
 blocks:
 
@@ -71,37 +86,43 @@ blocks:
 
   write:
     ops:
-      write-node-alpha: >2
-        xquery version "3.1";
+      write-node-alpha:
+        ratio: 1
+        # start-timers: write-alpha
+        # stop-timers: write-alpha
+        op: >2
+          xquery version "3.1";
 
-        import module namespace xmldb="http://exist-db.org/xquery/xmldb";
+          import module namespace xmldb="http://exist-db.org/xquery/xmldb";
 
-        declare namespace dasg = "https://dasg.ac.uk/corpus/";
+          declare namespace dasg = "https://dasg.ac.uk/corpus/";
 
-        let $mylogin := xmldb:login("/{collection}", "{user}", "{pass}")
+          let $mylogin := xmldb:login("/{collection}", "{user}", "{pass}")
 
-        let $record :=
-          <text xmlns="https://dasg.ac.uk/corpus/" ref="https://dasg.ac.uk/corpus/_8-0" status="raw" seq="{seq_key}" user="{user_id}">
-            <pb n="5"/>
-            <h>
-              <w id="d1e1067" pos="ax" lemma="ro">RO</w>
-              <pc join="both">-</pc>
-              <w id="d1e1073" pos="vn" lemma="abair">RADH</w>
-            </h>
-            <p>
-              <w id="d1e1079" pos="p" lemma="bho">Bho</w>
-              <w id="d1e1082" pos="V" lemma="rach">chaidh</w>
-              <w id="d1e1085" pos="N" lemma="Hiort">Hiort</w>
-              <w id="d1e1088" pos="" lemma="fhàsachadh">fhàsachadh</w>
-              <w id="d1e1091" pos="p" lemma="an">ann an</w>
-            </p>
-          </text>
+          let $record :=
+            <text xmlns="https://dasg.ac.uk/corpus/" ref="https://dasg.ac.uk/corpus/_8-0" status="raw" seq="{seq_key}" user="{user_id}">
+              <pb n="5"/>
+              <h>
+                <w id="d1e1067" pos="ax" lemma="ro">RO</w>
+                <pc join="both">-</pc>
+                <w id="d1e1073" pos="vn" lemma="abair">RADH</w>
+              </h>
+              <p>
+                <w id="d1e1079" pos="p" lemma="bho">Bho</w>
+                <w id="d1e1082" pos="V" lemma="rach">chaidh</w>
+                <w id="d1e1085" pos="N" lemma="Hiort">Hiort</w>
+                <w id="d1e1088" pos="" lemma="fhàsachadh">fhàsachadh</w>
+                <w id="d1e1091" pos="p" lemma="an">ann an</w>
+              </p>
+            </text>
 
-        return
-          xmldb:store("/db/testnb/alpha", "{random_key}", $record)
+          return
+            xmldb:store("/db/testnb/alpha", "{random_key}", $record)
 
       write-node-beta:
         ratio: 4
+        # start-timers: write-beta
+        # stop-timers: write-beta
         op: >2
           xquery version "3.1";
 
@@ -127,6 +148,30 @@ blocks:
           return
             xmldb:store("/db/testnb/beta", "{random_key}", $record)
 
+  dbgwrite:
+    ops:
+      dbgwrite1:
+        # dynamic value of binding
+        orelse: "{created_on}"
+        otherwise: {full_name: created_on}
+        thirdly: {my_name: "{full_name}"}
+        four: <wibble>{full_name}</wibble>
+        more:
+          - "value"
+          - "{random_key}"
+          - "{{NumberNameToString()}}"
+          - "{test_list}"
+          - "{test_zipf}"
+        command: generate
+        ratio: 1
+        op: >2
+          <seq_key>{seq_key}</seq_key>
+          <user_id>{user_id}</user_id>
+          <friend_id>{friend_id}</friend_id>
+          <test_map>{test_map}</test_map>
+          <test_list>{test_list}</test_list>
+          <test_zipf>{test_zipf}</test_zipf>
+          
   read:
     ops:
       read-document: >2
