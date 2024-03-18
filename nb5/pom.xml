@@ -131,6 +131,12 @@
             <version>${revision}</version>
         </dependency>
 
+        <dependency>
+            <groupId>io.nosqlbench</groupId>
+            <artifactId>adapter-xmlgen</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
