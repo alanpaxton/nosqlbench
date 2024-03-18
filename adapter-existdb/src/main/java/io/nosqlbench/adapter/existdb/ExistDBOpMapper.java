@@ -78,13 +78,10 @@ public class ExistDBOpMapper implements OpMapper<ExistDBOp> {
 
         switch (command) {
             //TODO (AP) define and implement other types of command
-            case "generate":
-                return new ExistDBGeneratorOpDispenser(adapter, contextFn, op);
-            case "query":
-            default:
+            default -> {
                 // default is to submit an xquery "query"
-                return new ExistDBQueryOpDispenser(adapter, contextFn, op);
-
+                return new ExistDBOpDispenser(adapter, contextFn, op);
+            }
         }
 
     }

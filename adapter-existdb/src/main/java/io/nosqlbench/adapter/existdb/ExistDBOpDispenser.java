@@ -23,16 +23,16 @@ import io.nosqlbench.adapters.api.templating.ParsedOp;
 
 import java.util.function.LongFunction;
 
-public class ExistDBQueryOpDispenser extends BaseOpDispenser<ExistDBOp, ExistDBSpace> {
+public class ExistDBOpDispenser extends BaseOpDispenser<ExistDBOp, ExistDBSpace> {
 
-    private final LongFunction<ExistDBQueryOp> opFunc;
+    private final LongFunction<ExistDBOp> opFunc;
 
-    public ExistDBQueryOpDispenser(ExistDBDriverAdapter adapter, LongFunction<ExistDBSpace> contextFn, ParsedOp op) {
+    public ExistDBOpDispenser(ExistDBDriverAdapter adapter, LongFunction<ExistDBSpace> contextFn, ParsedOp op) {
         super(adapter, op);
         opFunc = createOpFunc(contextFn, op);
     }
 
-    private LongFunction<ExistDBQueryOp> createOpFunc(LongFunction<ExistDBSpace> contextFn, ParsedOp op) {
+    private LongFunction<ExistDBOp> createOpFunc(LongFunction<ExistDBSpace> contextFn, ParsedOp op) {
 
         LongFunction<?> payload = op.getAsRequiredFunction("stmt", Object.class);
 
@@ -40,14 +40,14 @@ public class ExistDBQueryOpDispenser extends BaseOpDispenser<ExistDBOp, ExistDBS
 
         final LongFunction<String> collectionFn = op.getAsFunctionOr("collection", "db");
 
-        return l -> new ExistDBQueryOp(
+        return l -> new ExistDBOp(
             contextFn.apply(l).getClient(),
             collectionFn.apply(l),
             xqueryFn.apply(l));
     }
 
     @Override
-    public ExistDBQueryOp apply(long value) {
+    public ExistDBOp apply(long value) {
         return opFunc.apply(value);
     }
 }

@@ -26,6 +26,9 @@ scenarios:
   debugexist:
     dbgwrite:    run driver=existdb tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,50)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
+  debugxmlgen:
+    dbgwrite:    run driver=xmlgen tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,50)) seq=interval threads=auto errors=timer,warn
+
 bindings:
 
   collection: FixedValue(<<collection:"db">>) -> String

@@ -21,14 +21,23 @@ package io.nosqlbench.adapter.existdb;
 import io.nosqlbench.adapters.api.activityimpl.uniform.flowtypes.CycleOp;
 import org.w3c.dom.Element;
 
-public abstract class ExistDBOp implements CycleOp<Object> {
+public class ExistDBOp implements CycleOp<Object> {
 
     protected final ExistDBClient client;
 
     protected final String collection;
 
-    public ExistDBOp(ExistDBClient client, String collection) {
+    public ExistDBOp(ExistDBClient client, String collection, String xquery) {
         this.client = client;
         this.collection = collection;
+        this.xquery = xquery;
     }
+
+    private final String xquery;
+
+    @Override
+    public Object apply(long value) {
+        return client.executeQuery(xquery);
+    }
+
 }

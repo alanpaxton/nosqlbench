@@ -1,14 +1,14 @@
-package io.nosqlbench.adapter.existdb;
+package io.nosqlbench.adapter.xmlgen;
 
 /*
  * Copyright (c) 2022 nosqlbench
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,17 +21,16 @@ package io.nosqlbench.adapter.existdb;
 import io.nosqlbench.adapters.api.activityimpl.uniform.flowtypes.CycleOp;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.w3c.dom.Element;
 
 import java.util.Map;
 
-public class ExistDBGeneratorOp extends ExistDBOp {
+public class XMLGenOp implements CycleOp<Object> {
 
-    private final static Logger logger = LogManager.getLogger(ExistDBSpace.class);
+    private final static Logger logger = LogManager.getLogger(XMLGenSpace.class);
 
     @Override
     public String toString() {
-        return "ExistDBGeneratorOp{" +
+        return "XMLGenOp{" +
             "definition=" + definition +
             ", attrs=" + attrs +
             ", fullname='" + fullname + '\'' +
@@ -46,8 +45,7 @@ public class ExistDBGeneratorOp extends ExistDBOp {
     final Object city;
     final Object body;
 
-    public ExistDBGeneratorOp(ExistDBClient client, String collection, Object definition, Map attrs, String fullname, Object city, Object body) {
-        super(client, collection);
+    public XMLGenOp(Object definition, Map attrs, String fullname, Object city, Object body) {
         this.definition = definition;
         this.attrs = attrs;
         this.fullname = fullname;
@@ -61,5 +59,5 @@ public class ExistDBGeneratorOp extends ExistDBOp {
 
         return "hello?";
     }
-}
 
+}
