@@ -24,7 +24,7 @@ scenarios:
     dbgwrite:    run driver=stdout tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10)) seq=interval threads=auto errors=timer,warn
 
   debugexist:
-    dbgwrite:    run driver=existdb tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+    dbgwrite:    run driver=existdb tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,50)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
 bindings:
 
@@ -45,12 +45,6 @@ bindings:
   lat: Uniform(-180d, 180d)
   lng: Hash() -> long; Uniform(-180d, 180d)
   friend_id: Add(-1); ToHashedUUID(); ToString() -> String
-
-  # debugging / testing
-  test_map: MapSizedStepped(Zipf(100,2), NumberNameToString(), NumberNameToString())
-  test_list: ListSizedStepped(HashInterval(3,7),HashInterval(10,20))
-  test_list2: ListSizedStepped(Id()),Id())
-  test_zipf: Zipf(1000,2)
 
 blocks:
 
@@ -151,26 +145,25 @@ blocks:
   dbgwrite:
     ops:
       dbgwrite1:
-        # dynamic value of binding
-        orelse: "{created_on}"
-        otherwise: {full_name: created_on}
-        thirdly: {my_name: "{full_name}"}
-        four: <wibble>{full_name}</wibble>
-        more:
-          - "value"
-          - "{random_key}"
-          - "{{NumberNameToString()}}"
-          - "{test_list}"
-          - "{test_zipf}"
+        # these are just examples
         command: generate
-        ratio: 1
+        cycle: "{Identity()}"
+        attrs:
+          { id: "{user_id}",
+            count: "{{Identity()}}",
+            pos: "{}",
+            lemma: "{}",
+            map: "{{MapSizedStepped(Zipf(100,2), Identity(), NumberNameToString())}}",
+            s: "{{NumberNameToString()}}",
+          }
+        fullname: "{{FullNames()}}"
+        city: "{{CitiesByPopulation()}}"
+        # body: "{{ListSizedHashed(Identity(), StateNamesByPopulation()); ToString()}}"
+        body: "{{MobyDick()}}"
+        count: "{{Identity()}}"
+        ratio: 4
         op: >2
-          <seq_key>{seq_key}</seq_key>
-          <user_id>{user_id}</user_id>
-          <friend_id>{friend_id}</friend_id>
-          <test_map>{test_map}</test_map>
-          <test_list>{test_list}</test_list>
-          <test_zipf>{test_zipf}</test_zipf>
+          text / lg / w
           
   read:
     ops:

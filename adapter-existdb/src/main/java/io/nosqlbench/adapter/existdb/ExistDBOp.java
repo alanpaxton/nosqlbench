@@ -19,6 +19,7 @@ package io.nosqlbench.adapter.existdb;
 
 
 import io.nosqlbench.adapters.api.activityimpl.uniform.flowtypes.CycleOp;
+import org.w3c.dom.Element;
 
 public abstract class ExistDBOp implements CycleOp<Object> {
 
@@ -30,6 +31,4 @@ public abstract class ExistDBOp implements CycleOp<Object> {
         this.client = client;
         this.collection = collection;
     }
-
-
 }

@@ -20,10 +20,15 @@ package io.nosqlbench.adapter.existdb;
 
 import io.nosqlbench.adapters.api.activityimpl.BaseOpDispenser;
 import io.nosqlbench.adapters.api.templating.ParsedOp;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.util.Map;
 import java.util.function.LongFunction;
 
 public class ExistDBGeneratorOpDispenser extends BaseOpDispenser<ExistDBOp, ExistDBSpace> {
+
+    private final static Logger logger = LogManager.getLogger(ExistDBSpace.class);
 
     private final LongFunction<ExistDBGeneratorOp> opFunc;
 
@@ -34,20 +39,31 @@ public class ExistDBGeneratorOpDispenser extends BaseOpDispenser<ExistDBOp, Exis
 
     private LongFunction<ExistDBGeneratorOp> createOpFunc(LongFunction<ExistDBSpace> contextFn, ParsedOp op) {
 
-        LongFunction<?> payload = op.getAsRequiredFunction("stmt", Object.class);
-
-        final LongFunction<String> xqueryFn = l -> payload.apply(l).toString();
-
         final LongFunction<String> collectionFn = op.getAsFunctionOr("collection", "db");
+
+        LongFunction<?> content = op.getAsRequiredFunction("stmt", Object.class);
+
+        var attrs = op.getAsRequiredFunction("attrs", Map.class);
+        var fullname = op.getAsRequiredFunction("fullname", String.class);
+        var city = op.getAsRequiredFunction("city", Object.class);
+        var body = op.getAsRequiredFunction("body", Object.class);
 
         return l -> new ExistDBGeneratorOp(
             contextFn.apply(l).getClient(),
-            collectionFn.apply(l));
+            collectionFn.apply(l),
+            content.apply(l),
+            attrs.apply(l),
+            fullname.apply(l),
+            city.apply(l),
+            body.apply(l));
     }
 
     @Override
     public ExistDBGeneratorOp apply(long value) {
-        return opFunc.apply(value);
+        final var result = opFunc.apply(value);
+        logger.warn(() -> result);
+
+        return result;
     }
 }
 

@@ -73,24 +73,6 @@ public class ExistDBOpMapper implements OpMapper<ExistDBOp> {
         spaceCache.get(spaceFn.apply(0L)).createExistDBClient(connectionURL, collection, user, pass);
 
         String command = op.getStaticConfigOr("command", "query");
-        LongFunction<String> four = op.getAsRequiredFunction("four");
-        var example = four.apply(0);
-        var fourR = op.getAsRequiredFunction("four", String.class);
-        var fourRV = fourR.apply(0);
-        var thirdlyR = op.getAsRequiredFunction("thirdly", Map.class);
-        var thirdlyRV = thirdlyR.apply(0);
-
-        var more = op.getAsFunctionOr("more", null);
-        var moreV = more.apply(0);
-        var moreR = op.getAsRequiredFunction("more", List.class);
-        var moreRV = moreR.apply(0);
-        var undef1 = op.getAsFunctionOr("undef", "forty-two");
-        var undef1V = undef1.apply(0);
-        var otherwiseR = op.getAsRequiredFunction("otherwise", Map.class);
-        var otherwiseRV = otherwiseR.apply(0);
-
-        var orelseR = op.getAsRequiredFunction("orelse", Long.class);
-        var orelseRV = orelseR.apply(0);
 
         var stmt = op.getAsRequiredFunction("stmt", Object.class);
 

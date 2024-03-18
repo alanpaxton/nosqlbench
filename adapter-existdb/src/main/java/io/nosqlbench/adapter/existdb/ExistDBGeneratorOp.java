@@ -19,18 +19,47 @@ package io.nosqlbench.adapter.existdb;
 
 
 import io.nosqlbench.adapters.api.activityimpl.uniform.flowtypes.CycleOp;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.w3c.dom.Element;
+
+import java.util.Map;
 
 public class ExistDBGeneratorOp extends ExistDBOp {
 
-    public ExistDBGeneratorOp(ExistDBClient client, String collection) {
+    private final static Logger logger = LogManager.getLogger(ExistDBSpace.class);
+
+    @Override
+    public String toString() {
+        return "ExistDBGeneratorOp{" +
+            "definition=" + definition +
+            ", attrs=" + attrs +
+            ", fullname='" + fullname + '\'' +
+            ", city=" + city +
+            ", body=" + body +
+            '}';
+    }
+
+    final Object definition;
+    final Map attrs;
+    final String fullname;
+    final Object city;
+    final Object body;
+
+    public ExistDBGeneratorOp(ExistDBClient client, String collection, Object definition, Map attrs, String fullname, Object city, Object body) {
         super(client, collection);
+        this.definition = definition;
+        this.attrs = attrs;
+        this.fullname = fullname;
+        this.city = city;
+        this.body = body;
     }
 
     @Override
     public Object apply(long value) {
         //TODO (AP)
 
-        return null;
+        return "hello?";
     }
 }
 
