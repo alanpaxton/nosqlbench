@@ -33,31 +33,32 @@ public class XMLGenOp implements CycleOp<Object> {
         return "XMLGenOp{" +
             "definition=" + definition +
             ", attrs=" + attrs +
-            ", fullname='" + fullname + '\'' +
-            ", city=" + city +
+            ", file(index)=" + file +
+            ", element='" + element + '\'' +
             ", body=" + body +
             '}';
     }
 
+    final XMLGenContext xmlGenContext;
+
     final Object definition;
     final Map attrs;
-    final String fullname;
-    final Object city;
-    final Object body;
+    final Long file;
+    final String element;
+    final String body;
 
-    public XMLGenOp(Object definition, Map attrs, String fullname, Object city, Object body) {
+    public XMLGenOp(final XMLGenContext xmlGenContext, final Object definition, final Long file, final String element, final Map<String, Object> attrs, final String body) {
+        this.xmlGenContext = xmlGenContext;
         this.definition = definition;
         this.attrs = attrs;
-        this.fullname = fullname;
-        this.city = city;
+        this.file = file;
+        this.element = element;
         this.body = body;
     }
 
     @Override
     public Object apply(long value) {
-        //TODO (AP)
-
-        return "hello?";
+        return xmlGenContext.createElement(file, element, attrs, body);
     }
 
 }

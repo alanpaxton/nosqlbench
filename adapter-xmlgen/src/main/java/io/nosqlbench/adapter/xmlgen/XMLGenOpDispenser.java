@@ -39,15 +39,16 @@ public class XMLGenOpDispenser extends BaseOpDispenser<XMLGenOp, XMLGenSpace>  {
         LongFunction<?> content = op.getAsRequiredFunction("stmt", Object.class);
 
         var attrs = op.getAsRequiredFunction("attrs", Map.class);
-        var fullname = op.getAsRequiredFunction("fullname", String.class);
-        var city = op.getAsRequiredFunction("city", Object.class);
-        var body = op.getAsRequiredFunction("body", Object.class);
+        var file = op.getAsRequiredFunction("file", Long.class);
+        var element = op.getAsRequiredFunction("element", String.class);
+        var body = op.getAsRequiredFunction("body", String.class);
 
         return l -> new XMLGenOp(
+            contextFn.apply(l).getXMLGenContext(),
             content.apply(l),
+            file.apply(l),
+            element.apply(l),
             attrs.apply(l),
-            fullname.apply(l),
-            city.apply(l),
             body.apply(l));
     }
 

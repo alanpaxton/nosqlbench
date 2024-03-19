@@ -26,11 +26,13 @@ import io.nosqlbench.nb.api.config.standard.Param;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class XMLGenSpace implements NBNamedElement {
+public class XMLGenSpace implements NBNamedElement, AutoCloseable {
 
     private final static Logger logger = LogManager.getLogger(XMLGenSpace.class);
     private final String spaceName;
     private final NBConfiguration xmlGenConfig;
+
+    private XMLGenContext xmlGenContext;
 
     public XMLGenSpace(String name, NBConfiguration cfg) {
         this.spaceName = name;
@@ -49,5 +51,30 @@ public class XMLGenSpace implements NBNamedElement {
     public String getName() {
         return spaceName;
     }
+
+    @Override
+    public void close() {
+        try {
+            if (xmlGenContext != null) {
+                xmlGenContext.close();
+            }
+        } catch (Exception e) {
+            logger.error(() -> "auto-closeable xmlgen generation context threw exception in " +
+                "xmlgen space(" + this.spaceName + "): " + e);
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
+    public void createXMLGenContext(final String directorypath, final String rootNode) {
+
+        this.xmlGenContext = new XMLGenContext(directorypath, rootNode);
+    }
+
+    public XMLGenContext getXMLGenContext() {
+        return this.xmlGenContext;
+    }
+
 }
 

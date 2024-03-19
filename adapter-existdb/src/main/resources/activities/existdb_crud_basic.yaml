@@ -27,7 +27,7 @@ scenarios:
     dbgwrite:    run driver=existdb tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,50)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
   debugxmlgen:
-    dbgwrite:    run driver=xmlgen tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,50)) seq=interval threads=auto errors=timer,warn
+    generate:    run driver=xmlgen tags==block:"generate.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,100000)) seq=interval threads=auto errors=timer,warn directorypath=/Users/alan/swProjects/evolvedBinary/nosqlbench/gentmp
 
 bindings:
 
@@ -48,6 +48,12 @@ bindings:
   lat: Uniform(-180d, 180d)
   lng: Hash() -> long; Uniform(-180d, 180d)
   friend_id: Add(-1); ToHashedUUID(); ToString() -> String
+
+  # distribute generated XML over 1000 files, weighted heavily to the first few
+  # via use of the exponential. With a rate parameter of 0.01, (mean == 1/rate == 100)
+  # PD (probability density) for x=10 tells us 9.5% of data lands in the first 10 files
+  # PD x=1 -> 0.01, x=10 -> 0.095, x=100 -> 0.632, x=1000 -> 0.9999
+  xml_file_id_dist: Exponential(100); ModuloToLong(1000)
 
 blocks:
 
@@ -145,28 +151,36 @@ blocks:
           return
             xmldb:store("/db/testnb/beta", "{random_key}", $record)
 
-  dbgwrite:
+  generate:
     ops:
-      dbgwrite1:
-        # these are just examples
-        command: generate
-        cycle: "{Identity()}"
+      generate1:
+        command: element
+        cycle: "{{Identity()}}"
+        # file: "{{Zipf(100,4)}}"
+        file: "{xml_file_id_dist}"
+        # currently only generating elements at top level
+        element: "w"
+        root: "text"
         attrs:
-          { id: "{user_id}",
+          { uid: "{user_id}",
             count: "{{Identity()}}",
-            pos: "{}",
-            lemma: "{}",
+            pos: "{{WeightedStrings('c:20;z:8;n:4;p:2;d;Dx:3')}}",
+            first: "{{FirstNames()}}",
+            last: "{{LastNames()}}",
+            full: "{{FullNames()}}",
+            city: "{{CitiesByPopulation()}}",
             map: "{{MapSizedStepped(Zipf(100,2), Identity(), NumberNameToString())}}",
             s: "{{NumberNameToString()}}",
           }
-        fullname: "{{FullNames()}}"
-        city: "{{CitiesByPopulation()}}"
-        # body: "{{ListSizedHashed(Identity(), StateNamesByPopulation()); ToString()}}"
         body: "{{MobyDick()}}"
         count: "{{Identity()}}"
         ratio: 4
+        # currently being ignored
         op: >2
           text / lg / w
+
+      # generate2:
+      #   body: "{{ListSizedHashed(Identity(), StateNamesByPopulation()); ToString()}}"
           
   read:
     ops:
