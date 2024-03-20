@@ -27,7 +27,7 @@ scenarios:
     dbgwrite:    run driver=existdb tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,50)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
   debugxmlgen:
-    generate:    run driver=xmlgen tags==block:"generate.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,100000)) seq=interval threads=auto errors=timer,warn directorypath=/Users/alan/swProjects/evolvedBinary/nosqlbench/gentmp
+    generate:    run driver=xmlgen tags==block:"generate.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,100000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated
 
 bindings:
 

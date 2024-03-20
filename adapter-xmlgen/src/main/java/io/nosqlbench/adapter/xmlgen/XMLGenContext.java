@@ -21,6 +21,7 @@ import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.push.Document;
 import net.sf.saxon.s9api.push.Element;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.util.Pair;
 
 import java.io.File;
@@ -51,11 +52,24 @@ public class XMLGenContext {
      */
     public XMLGenContext(final String directorypath, final String rootNode) {
         var file = new File(directorypath).getAbsoluteFile();
-        if (!file.exists()) {
-            throw new RuntimeException("XML Generation, root directory does not exist: " + file.getPath());
-        }
-        if (!file.isDirectory()) {
+        if (file.exists() && !file.isDirectory()) {
             throw new RuntimeException("XML Generation, root directory is not a directory: " + file.getPath());
+        }
+        if (file.exists()) {
+            try {
+                FileUtils.cleanDirectory(file);
+            } catch (IOException e) {
+                throw new RuntimeException("XML Generation, could not clean output directory: " + file.getPath(), e);
+            }
+        } else {
+            try {
+                FileUtils.createParentDirectories(file);
+            } catch (IOException e) {
+                throw new RuntimeException("XML Generation, could create path to output directory: " + file.getPath(), e);
+            }
+            if (!file.mkdir()) {
+                throw new RuntimeException("XML Generation, could create output directory: " + file.getPath());
+            }
         }
         this.outputDirectory = file;
         this.rootNode = rootNode;
@@ -109,16 +123,11 @@ public class XMLGenContext {
         var pair = files.computeIfAbsent(fileIndex, newFile -> {
             final var file = new File(outputDirectory, "xml" + fileIndex + ".xml");
             try {
-                if (file.exists()) {
-                    if (!file.delete()) {
-                        throw new RuntimeException("XML gen file " + file + " previous version could not be deleted.");
-                    }
-                }
                 if (!file.createNewFile()) {
                     throw new RuntimeException("XML gen file " + file + " already exists.");
                 }
             } catch (IOException e) {
-                throw new RuntimeException("XML gen file " + file + " could not be created.");
+                throw new RuntimeException("XML gen file " + file + " could not be created.", e);
             }
             try {
                 final var pushDocument = getProcesser().newPush(getProcesser().newSerializer(file)).document(true);
