@@ -53,7 +53,7 @@ bindings:
   # via use of the exponential. With a rate parameter of 0.01, (mean == 1/rate == 100)
   # PD (probability density) for x=10 tells us 9.5% of data lands in the first 10 files
   # PD x=1 -> 0.01, x=10 -> 0.095, x=100 -> 0.632, x=1000 -> 0.9999
-  xml_file_id_dist: Exponential(100); ModuloToLong(1000)
+  xml_file_id: Exponential(100); ModuloToLong(1000)
 
 blocks:
 
@@ -153,11 +153,10 @@ blocks:
 
   generate:
     ops:
-      generate1:
+      generate-flat-xml:
         command: element
         cycle: "{{Identity()}}"
-        # file: "{{Zipf(100,4)}}"
-        file: "{xml_file_id_dist}"
+        file: "{xml_file_id}"
         # currently only generating elements at top level
         element: "w"
         root: "text"
