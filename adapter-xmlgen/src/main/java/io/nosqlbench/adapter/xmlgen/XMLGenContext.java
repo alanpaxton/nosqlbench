@@ -33,6 +33,11 @@ public class XMLGenContext {
 
     private static Processor singletonProcessor;
 
+    /**
+     * Access and possibly create the singleton Processor
+     *
+     * @return the shared singleton processor
+     */
     synchronized private static Processor getProcesser() {
         if (singletonProcessor == null) {
             singletonProcessor = new Processor();
@@ -89,6 +94,19 @@ public class XMLGenContext {
         }
     }
 
+    /**
+     * <p>
+     *     Synchronized to prevent separate threads creating child elements of the same root concurrently.
+     *     I like the idea of queueing {@code createElement} requests, but it's fine the way it is;
+     *     there's only contention on the lock when 2 threads are coincidentally working on the same file.
+     *     Which happens, so we need this for correctness, but it isn't a performance issue.
+     * </p>
+     * @param fileIndex
+     * @param elementName
+     * @param attrs
+     * @param body
+     * @return
+     */
     public Object createElement(final Long fileIndex, final String elementName, final Map<String, Object> attrs, final String body) {
 
         final var rootElement = getDocumentRoot(fileIndex);
@@ -114,6 +132,10 @@ public class XMLGenContext {
      * Get hold of the root element of the file at the supplied index
      * Create the file on first access, assuming it does not already exist,
      * and build the initial (root) element.
+     * <p>
+     *     Synchronized to prevent multiple threads potentially creating the same file
+     *     when they collide on the file id
+     * </p>
      *
      * @param fileIndex index of the XML file being created
      * @return the root element of the XML file for the supplied fileIndex
