@@ -26,7 +26,7 @@ scenarios:
   debugexist:
     dbgwrite:    run driver=existdb tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,50)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
-  debugxmlgen:
+  xmlgen:
     generate:    run driver=xmlgen tags==block:"generate.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,100000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated
 
 bindings:

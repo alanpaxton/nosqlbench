@@ -112,8 +112,7 @@ public class XMLGenContext {
 
     /**
      * Get hold of the root element of the file at the supplied index
-     * On first instantiation, delete any previous version of the file.
-     * Create the file now, assuming it does not already exist,
+     * Create the file on first access, assuming it does not already exist,
      * and build the initial (root) element.
      *
      * @param fileIndex index of the XML file being created
