@@ -20,6 +20,7 @@ package io.nosqlbench.adapter.xmlgen;
 import io.nosqlbench.adapters.api.activityimpl.BaseOpDispenser;
 import io.nosqlbench.adapters.api.templating.ParsedOp;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.LongFunction;
 
@@ -34,20 +35,21 @@ public class XMLGenOpDispenser extends BaseOpDispenser<XMLGenOp, XMLGenSpace>  {
 
     private LongFunction<XMLGenOp> createOpFunc(LongFunction<XMLGenSpace> contextFn, ParsedOp op) {
 
-        LongFunction<?> payload = op.getAsRequiredFunction("stmt", Object.class);
-
         LongFunction<?> content = op.getAsRequiredFunction("stmt", Object.class);
 
+        var children = op.getAsRequiredFunction("children", Map.class);
         var attrs = op.getAsRequiredFunction("attrs", Map.class);
         var file = op.getAsRequiredFunction("file", Long.class);
-        var element = op.getAsRequiredFunction("element", String.class);
         var body = op.getAsRequiredFunction("body", String.class);
+
+        var path = op.getAsRequiredFunction("path", List.class);
 
         return l -> new XMLGenOp(
             contextFn.apply(l).getXMLGenContext(),
             content.apply(l),
             file.apply(l),
-            element.apply(l),
+            path.apply(l),
+            children.apply(l),
             attrs.apply(l),
             body.apply(l));
     }

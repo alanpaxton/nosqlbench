@@ -23,17 +23,19 @@ scenarios:
   debugstdout:
     dbgwrite:    run driver=stdout tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10)) seq=interval threads=auto errors=timer,warn
 
-  debugexist:
-    dbgwrite:    run driver=existdb tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,50)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+  existdb:
+    write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
   xmlgen:
-    generate:    run driver=xmlgen tags==block:"generate.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,100000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated
+    generate:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated
 
 bindings:
 
   collection: FixedValue(<<collection:"db">>) -> String
   user: FixedValue(<<user:"admin">>) -> String
   pass: FixedValue(<<pass:"">>) -> String
+
+  root: FixedValue("site") -> String
 
   seq_key: Mod(<<docscount:10000000>>); ToString() -> String
   random_key: Uniform(0,<<docscount:10000000>>); ToString() -> String
@@ -151,7 +153,7 @@ blocks:
           return
             xmldb:store("/db/testnb/beta", "{random_key}", $record)
 
-  generate:
+  genw:
     ops:
       generate-flat-xml:
         command: element
@@ -178,8 +180,80 @@ blocks:
         op: >2
           text / lg / w
 
+  genauctionitems:
+    ops:
+      generate-nested-item:
+        cycle: "{{Identity()}}"
+        file: "{xml_file_id}"
+        path: ["people", "person"]
+        attrs:
+          { uid: "{user_id}",
+            count: "{{Identity()}}",
+            pos: "{{WeightedStrings('c:20;z:8;n:4;p:2;d;Dx:3')}}",
+            first: "{{FirstNames()}}",
+            last: "{{LastNames()}}",
+            full: "{{FullNames()}}",
+            city: "{{CitiesByPopulation()}}",
+            map: "{{MapSizedStepped(Zipf(100,2), Identity(), NumberNameToString())}}",
+            s: "{{NumberNameToString()}}",
+          }
+        children:
+          { description: "{{MobyDick()}}"
+          }
+        body: "{{MobyDick()}}"
+        count: "{{Identity()}}"
+        ratio: 4
+        # currently being ignored
+        op: >2
+          text / lg / w
+
+      generate-nested-mail:
+        cycle: "{{Identity()}}"
+        file: "{xml_file_id}"
+        path: ["people", "person", "mailbox", "mail"]
+        children:
+          {
+            from: "{{FullNames()}}",
+            to: "{{Add(-1); FullNames()}}",
+            date: "{{ToDateTime(); ToString()}}",
+            text: "{{MobyDick()}}"
+          }
+        attrs:
+          { uid: "{user_id}",
+            count: "{{Identity()}}",
+            pos: "{{WeightedStrings('c:20;z:8;n:4;p:2;d;Dx:3')}}",
+            first: "{{FirstNames()}}",
+            last: "{{LastNames()}}",
+            full: "{{FullNames()}}",
+            city: "{{CitiesByPopulation()}}",
+            map: "{{MapSizedStepped(Zipf(100,2), Identity(), NumberNameToString())}}",
+            s: "{{NumberNameToString()}}",
+          }
+        body: "{{MobyDick()}}"
+        count: "{{Identity()}}"
+        ratio: 4
+        # currently being ignored
+        op: >2
+          text / lg / w
+
+
+  not-gen: # commented it out
+    ops:
       # generate2:
       #   body: "{{ListSizedHashed(Identity(), StateNamesByPopulation()); ToString()}}"
+      generate-items:
+        file: "{xml_file_id}"
+        element: "items"
+        body: ""
+        elements:
+          quantity: "{{HashInterval(1,100)}}"
+          productName: "{{StateNamesByPopulation()}}"
+        attrs:
+          { uid: "{user_id}",
+            partNum: "{{}}"
+          }
+        op: >2
+          "This is the `stmt' field, which is required by the system - do something with it..."
           
   read:
     ops:

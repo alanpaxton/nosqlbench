@@ -19,9 +19,11 @@ package io.nosqlbench.adapter.xmlgen;
 
 
 import io.nosqlbench.adapters.api.activityimpl.uniform.flowtypes.CycleOp;
+import net.sf.saxon.s9api.QName;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.List;
 import java.util.Map;
 
 public class XMLGenOp implements CycleOp<Object> {
@@ -32,33 +34,32 @@ public class XMLGenOp implements CycleOp<Object> {
     public String toString() {
         return "XMLGenOp{" +
             "definition=" + definition +
-            ", attrs=" + attrs +
+            ", children=" + element.children() +
+            ", attrs=" + element.attrs() +
             ", file(index)=" + file +
-            ", element='" + element + '\'' +
-            ", body=" + body +
+            ", path='" + path + '\'' +
+            ", body=" + element.body() +
             '}';
     }
 
     final XMLGenContext xmlGenContext;
 
     final Object definition;
-    final Map attrs;
     final Long file;
-    final String element;
-    final String body;
+    final List<QName> path;
+    final XMLGenElement element;
 
-    public XMLGenOp(final XMLGenContext xmlGenContext, final Object definition, final Long file, final String element, final Map<String, Object> attrs, final String body) {
+    public XMLGenOp(final XMLGenContext xmlGenContext, final Object definition, final Long file, final List<String> path, final Map<String, Object> children, final Map<String, Object> attrs, final String body) {
         this.xmlGenContext = xmlGenContext;
         this.definition = definition;
-        this.attrs = attrs;
+        this.element = new XMLGenElement(children, attrs, body);
         this.file = file;
-        this.element = element;
-        this.body = body;
+        this.path = path.stream().map(name -> new QName(name)).toList();
     }
 
     @Override
     public Object apply(long value) {
-        return xmlGenContext.createElement(file, element, attrs, body);
+        return xmlGenContext.createElement(file, path, element);
     }
 
 }

@@ -18,18 +18,17 @@ package io.nosqlbench.adapter.xmlgen;
  */
 
 import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.push.Document;
-import net.sf.saxon.s9api.push.Element;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.math3.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class XMLGenContext {
+public class XMLGenContext implements AutoCloseable {
 
     private static Processor singletonProcessor;
 
@@ -46,7 +45,7 @@ public class XMLGenContext {
     }
 
     private final File outputDirectory;
-    private final Map<Long, Pair<Document, Element>> files = new HashMap<>();
+    private final Map<Long, XMLGenDocBuilder> files = new HashMap<>();
 
     private final String rootNode;
 
@@ -86,11 +85,7 @@ public class XMLGenContext {
     public void close() {
 
         for (var file : files.entrySet()) {
-            try {
-                file.getValue().getFirst().close();
-            } catch (SaxonApiException e) {
-                throw new RuntimeException("XML gen file close " + file.getKey(), e);
-            }
+            file.getValue().close();
         }
     }
 
@@ -101,30 +96,16 @@ public class XMLGenContext {
      *     there's only contention on the lock when 2 threads are coincidentally working on the same file.
      *     Which happens, so we need this for correctness, but it isn't a performance issue.
      * </p>
-     * @param fileIndex
-     * @param elementName
-     * @param attrs
-     * @param body
-     * @return
+     * @param fileIndex file to which the new element is added
+     * @param elementPath path of node names to the new element
+     * @param elementContents sub-elements, attributes and body to apply to the new element
+     * @return a new element
      */
-    public Object createElement(final Long fileIndex, final String elementName, final Map<String, Object> attrs, final String body) {
+    public Object createElement(final Long fileIndex, final List<QName> elementPath, final XMLGenElement elementContents) {
 
-        final var rootElement = getDocumentRoot(fileIndex);
-        synchronized (rootElement) {
-            try {
-                final var element = rootElement.element(elementName);
-                for (var attr : attrs.entrySet()) {
-                    try {
-                        element.attribute(attr.getKey(), attr.getValue().toString());
-                    } catch (SaxonApiException e) {
-                        throw new RuntimeException("XML gen file attribute " + attr.getKey() + " on element " + elementName, e);
-                    }
-                }
-                element.text(body).close();
-                return element;
-            } catch (SaxonApiException e) {
-                throw new RuntimeException("XML gen file element " + elementName, e);
-            }
+        final var builder = getDocumentBuilder(fileIndex);
+        synchronized (builder) {
+            return builder.element(elementPath, elementContents);
         }
     }
 
@@ -140,8 +121,8 @@ public class XMLGenContext {
      * @param fileIndex index of the XML file being created
      * @return the root element of the XML file for the supplied fileIndex
      */
-    synchronized private Element getDocumentRoot(long fileIndex) {
-        var pair = files.computeIfAbsent(fileIndex, newFile -> {
+    synchronized private XMLGenDocBuilder getDocumentBuilder(long fileIndex) {
+        return files.computeIfAbsent(fileIndex, newFile -> {
             final var file = new File(outputDirectory, "xml" + fileIndex + ".xml");
             try {
                 if (!file.createNewFile()) {
@@ -152,11 +133,10 @@ public class XMLGenContext {
             }
             try {
                 final var pushDocument = getProcesser().newPush(getProcesser().newSerializer(file)).document(true);
-                return Pair.create(pushDocument, pushDocument.element(rootNode));
+                return new XMLGenDocBuilder(pushDocument, pushDocument.element(rootNode));
             } catch (SaxonApiException e) {
                 throw new RuntimeException("XML gen file " + file + " could not create serialization.");
             }
         });
-        return pair.getSecond();
     }
 }
