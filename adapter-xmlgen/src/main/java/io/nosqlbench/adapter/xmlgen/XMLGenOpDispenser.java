@@ -56,7 +56,7 @@ public class XMLGenOpDispenser extends BaseOpDispenser<XMLGenOp, XMLGenSpace>  {
     }
 
     @Override
-    public XMLGenOp apply(long value) {
+    public XMLGenOp getOp(long value) {
         return opFunc.apply(value);
     }
 }

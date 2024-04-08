@@ -47,7 +47,7 @@ public class ExistDBOpDispenser extends BaseOpDispenser<ExistDBOp, ExistDBSpace>
     }
 
     @Override
-    public ExistDBOp apply(long value) {
+    public ExistDBOp getOp(long value) {
         return opFunc.apply(value);
     }
 }
