@@ -27,7 +27,7 @@ scenarios:
     write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
   xmlgen:
-    # genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated xmlroot=site
+    genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated xmlroot=site
     genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated xmlroot=site
 
 bindings:
@@ -191,9 +191,9 @@ blocks:
           name: "{{FullNames()}}",
           email: "{email}",
           # education: "{{WeightedStrings('Other:3,High School:10,College:10,Graduate School:4'}}",
-          business: "{{WeightedStrings('Yes:1,No:2}}",
+          business: "{{WeightedStrings('Yes:1,No:2')}}",
         }
-      op: >2
+        op: >2
           "required by the system - we don't use it"
 
   genauctionitems:
