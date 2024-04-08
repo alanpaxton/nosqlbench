@@ -37,7 +37,7 @@ public class XMLGenDocBuilder implements AutoCloseable {
     }
 
     /**
-     * Create an element on the supplied path,
+     * Create an element on the supplied createPath,
      * use current open elements as parents as far down as we can go,
      * and create empty elements below that point.
      * If the open leaf element is the same element, close it.

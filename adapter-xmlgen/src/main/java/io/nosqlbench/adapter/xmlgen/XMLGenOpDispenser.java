@@ -22,6 +22,7 @@ import io.nosqlbench.adapters.api.templating.ParsedOp;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.LongFunction;
 
 public class XMLGenOpDispenser extends BaseOpDispenser<XMLGenOp, XMLGenSpace>  {
@@ -38,9 +39,9 @@ public class XMLGenOpDispenser extends BaseOpDispenser<XMLGenOp, XMLGenSpace>  {
         LongFunction<?> content = op.getAsRequiredFunction("stmt", Object.class);
 
         var children = op.getAsRequiredFunction("children", Map.class);
-        var attrs = op.getAsRequiredFunction("attrs", Map.class);
+        LongFunction<Map<String, Object>> attrs = op.getAsFunctionOr("attrs", Map.of());
         var file = op.getAsRequiredFunction("file", Long.class);
-        var body = op.getAsRequiredFunction("body", String.class);
+        var body = op.getAsFunctionOr("body", "");
 
         var path = op.getAsRequiredFunction("path", List.class);
 

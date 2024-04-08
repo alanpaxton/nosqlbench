@@ -52,22 +52,16 @@ public class XMLGenOpMapper implements OpMapper<XMLGenOp> {
             .get(spaceFn.apply(l));
 
         String directoryPath = op.getStaticConfigOr("directorypath", System.getProperty("user.dir"));
-        if (directoryPath == null) {
-            throw new BasicError("Must provide an endpoint value for use by the ExistDB adapter.");
-        }
-
-        String rootNode = op.getStaticConfigOr("root", "root");
+        String rootNode = op.getStaticConfigOr("xmlroot", "root");
 
         spaceCache.get(spaceFn.apply(0L)).createXMLGenContext(directoryPath, rootNode);
 
         String command = op.getStaticConfigOr("command", "element");
 
-        var stmt = op.getAsRequiredFunction("stmt", Object.class);
-
         switch (command) {
             //TODO (AP) define and implement other types of command
             default -> {
-                // default is to submit an xquery "query"
+                // default is to generate an element
                 return new XMLGenOpDispenser(adapter, contextFn, op);
             }
         }

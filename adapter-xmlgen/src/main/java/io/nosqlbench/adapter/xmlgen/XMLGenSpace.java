@@ -43,8 +43,9 @@ public class XMLGenSpace implements NBNamedElement, AutoCloseable {
         return ConfigModel.of(XMLGenSpace.class)
             .add(Param.required("directorypath", String.class)
                 .setDescription("The path at which to create the files"))
+            .add(Param.required("xmlroot", String.class)
+                .setDescription("The single root element of all files"))
             .asReadOnly();
-
     }
 
     @Override

@@ -1,9 +1,9 @@
 
 description: |
-  This workload emulates CRUD operations for eXist-db.
-  It generates a simple JSON document to be used for writes and updates.
-  It is adapter from the same worload for mongo db.
-  It's a counterpart of the Stargate's Documents API CRUD Basic workflow.
+  This workload does 2 different things for eXist-db (or ultimately, any xmldb)
+    - It generates XML documents in bulk for loading into a DB.
+    - It generates CRUD operations for direct access to the database.
+  It was derived ultimately from the existing CRUD Basic workflow examples in nb5.
 
 scenarios:
   default:
@@ -27,15 +27,14 @@ scenarios:
     write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
   xmlgen:
-    generate:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated
+    # genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated xmlroot=site
+    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated xmlroot=site
 
 bindings:
 
   collection: FixedValue(<<collection:"db">>) -> String
   user: FixedValue(<<user:"admin">>) -> String
   pass: FixedValue(<<pass:"">>) -> String
-
-  root: FixedValue("site") -> String
 
   seq_key: Mod(<<docscount:10000000>>); ToString() -> String
   random_key: Uniform(0,<<docscount:10000000>>); ToString() -> String
@@ -50,6 +49,8 @@ bindings:
   lat: Uniform(-180d, 180d)
   lng: Hash() -> long; Uniform(-180d, 180d)
   friend_id: Add(-1); ToHashedUUID(); ToString() -> String
+  email: ListHashed(LastNames(), AlphaNumericString(16), FixedValue("@"), AlphaNumericString(4), FixedValue(".")); Join('')
+          
 
   # distribute generated XML over 1000 files, weighted heavily to the first few
   # via use of the exponential. With a rate parameter of 0.01, (mean == 1/rate == 100)
@@ -153,7 +154,7 @@ blocks:
           return
             xmldb:store("/db/testnb/beta", "{random_key}", $record)
 
-  genw:
+  genflatexamples:
     ops:
       generate-flat-xml:
         command: element
@@ -161,7 +162,6 @@ blocks:
         file: "{xml_file_id}"
         # currently only generating elements at top level
         element: "w"
-        root: "text"
         attrs:
           { uid: "{user_id}",
             count: "{{Identity()}}",
@@ -176,41 +176,49 @@ blocks:
         body: "{{MobyDick()}}"
         count: "{{Identity()}}"
         ratio: 4
-        # currently being ignored
-        op: >2
-          text / lg / w
 
-  genauctionitems:
+  genauctionpeople:
     ops:
-      generate-nested-item:
+      generate-person:
         cycle: "{{Identity()}}"
         file: "{xml_file_id}"
         path: ["people", "person"]
         attrs:
-          { uid: "{user_id}",
-            count: "{{Identity()}}",
-            pos: "{{WeightedStrings('c:20;z:8;n:4;p:2;d;Dx:3')}}",
-            first: "{{FirstNames()}}",
-            last: "{{LastNames()}}",
-            full: "{{FullNames()}}",
+          { id: "person{{Identity()}}",
             city: "{{CitiesByPopulation()}}",
-            map: "{{MapSizedStepped(Zipf(100,2), Identity(), NumberNameToString())}}",
-            s: "{{NumberNameToString()}}",
           }
-        children:
-          { description: "{{MobyDick()}}"
-          }
-        body: "{{MobyDick()}}"
-        count: "{{Identity()}}"
-        ratio: 4
-        # currently being ignored
-        op: >2
-          text / lg / w
+        children: {
+          name: "{{FullNames()}}",
+          email: "{email}",
+          # education: "{{WeightedStrings('Other:3,High School:10,College:10,Graduate School:4'}}",
+          business: "{{WeightedStrings('Yes:1,No:2}}",
+        }
+      op: >2
+          "required by the system - we don't use it"
 
-      generate-nested-mail:
+  genauctionitems:
+    ops:
+      generate-item:
         cycle: "{{Identity()}}"
         file: "{xml_file_id}"
-        path: ["people", "person", "mailbox", "mail"]
+        path: ["regions", "africa", "item"]
+        attrs:
+          { id: "item{{Identity()}}",
+          }
+        children:
+          { location: "{{CountryNames()}}",
+            quantity: "{{Exponential(10)}}",
+            name: "{{Zipf(100,2); NumberNameToString())}}",
+            payment: "{{}}"
+          }
+        ratio: 4
+        op: >2
+          "required by the system - we don't use it"
+
+      generate-mail:
+        cycle: "{{Identity()}}"
+        file: "{xml_file_id}"
+        path: ["regions", "africa", "item", "mailbox", "mail"]
         children:
           {
             from: "{{FullNames()}}",
@@ -218,23 +226,9 @@ blocks:
             date: "{{ToDateTime(); ToString()}}",
             text: "{{MobyDick()}}"
           }
-        attrs:
-          { uid: "{user_id}",
-            count: "{{Identity()}}",
-            pos: "{{WeightedStrings('c:20;z:8;n:4;p:2;d;Dx:3')}}",
-            first: "{{FirstNames()}}",
-            last: "{{LastNames()}}",
-            full: "{{FullNames()}}",
-            city: "{{CitiesByPopulation()}}",
-            map: "{{MapSizedStepped(Zipf(100,2), Identity(), NumberNameToString())}}",
-            s: "{{NumberNameToString()}}",
-          }
-        body: "{{MobyDick()}}"
-        count: "{{Identity()}}"
         ratio: 4
-        # currently being ignored
         op: >2
-          text / lg / w
+          "required by the system - we don't use it"
 
 
   not-gen: # commented it out
@@ -253,7 +247,7 @@ blocks:
             partNum: "{{}}"
           }
         op: >2
-          "This is the `stmt' field, which is required by the system - do something with it..."
+          "required by the system - we don't use it"
           
   read:
     ops:
