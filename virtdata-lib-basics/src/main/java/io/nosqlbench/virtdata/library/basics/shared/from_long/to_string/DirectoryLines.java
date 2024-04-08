@@ -57,7 +57,7 @@ public class DirectoryLines implements LongFunction<String> {
         this.basepath = basepath;
         this.namePattern = Pattern.compile(namePattern);
         allFiles = getAllFiles();
-        if (allFiles.size() == 0) {
+        if (allFiles.isEmpty()) {
             throw new RuntimeException("Loaded zero files from " + basepath + ", full path:" + Paths.get(basepath).getFileName());
         }
         pathIterator = allFiles.iterator();
@@ -143,5 +143,6 @@ public class DirectoryLines implements LongFunction<String> {
         }
 
     }
+
 }
 

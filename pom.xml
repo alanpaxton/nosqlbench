@@ -14,7 +14,9 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>nosqlbench</artifactId>
@@ -34,56 +36,13 @@
     </description>
 
     <properties>
-        <!-- CORE MODULES -->
-        <module.mvn-defaults>mvn-defaults</module.mvn-defaults>
-        <module.nb-api>nb-api</module.nb-api>
-        <module.nb-annotations>nb-annotations</module.nb-annotations>
-        <module.adapters-api>adapters-api</module.adapters-api>
-        <module.engine-api>engine-api</module.engine-api>
-
-        <module.engine-extensions>engine-extensions</module.engine-extensions>
-        <module.engine-docker>engine-docker</module.engine-docker>
-        <module.engine-cli>engine-cli</module.engine-cli>
-
-        <module.nb5>nb5</module.nb5>
-        <module.nbr>nbr</module.nbr>
-
-        <module.nb-spectest>nb-spectest</module.nb-spectest>
-<!--        <module.nbr-examples>nbr-examples</module.nbr-examples>-->
-
-        <!-- driver modules -->
-        <module.adapter-diag>adapter-diag</module.adapter-diag>
-        <module.adapter-stdout>adapter-stdout</module.adapter-stdout>
-        <module.adapter-cqld4>adapter-cqld4</module.adapter-cqld4>
-        <module.adapter-http>adapter-http</module.adapter-http>
-        <module.adapter-tcp>adapter-tcp</module.adapter-tcp>
-        <module.adapter-dynamodb>adapter-dynamodb</module.adapter-dynamodb>
-        <module.adapter-mongodb>adapter-mongodb</module.adapter-mongodb>
-        <module.adapter-pulsar>adapter-pulsar</module.adapter-pulsar>
-        <module.adapter-s4j>adapter-s4j</module.adapter-s4j>
-        <module.adapter-kafka>adapter-kafka</module.adapter-kafka>
-        <module.adapter-kafka>adapter-amqp</module.adapter-kafka>
-        <module.adapter-jdbc>adapter-jdbc</module.adapter-jdbc>
-        <module.adapter-existdb>adapter-existdb</module.adapter-existdb>
-        <module.adapter-xmlgen>adapter-xmlgen</module.adapter-xmlgen>
-
-        <!-- VIRTDATA MODULES -->
-        <module.virtdata-api>virtdata-api</module.virtdata-api>
-        <module.virtdata-lang>virtdata-lang</module.virtdata-lang>
-        <module.virtdata-realdata>virtdata-realdata</module.virtdata-realdata>
-        <module.virtdata-lib-basics>virtdata-lib-basics</module.virtdata-lib-basics>
-        <module.virtdata-lib-random>virtdata-lib-random</module.virtdata-lib-random>
-        <module.virtdata-lib-curves4>virtdata-lib-curves4</module.virtdata-lib-curves4>
-        <module.virtdata-lib-realer>virtdata-lib-realer</module.virtdata-lib-realer>
-        <module.virtdata-lib-realer>virtdata-lib-hdf5</module.virtdata-lib-realer>
-        <module.virtdata-userlibs>virtdata-userlibs</module.virtdata-userlibs>
     </properties>
     <modules>
 
         <!-- TODO - consider using properties in the module defs. -->
         <!-- CORE MODULES -->
         <module>mvn-defaults</module>
-        <module>nb5-proof</module>
+        <!--        <module>nb5-proof</module>-->
         <module>nb5</module>
         <module>nbr</module>
         <module>nbr-examples</module>
@@ -99,6 +58,7 @@
         <!-- driver modules -->
         <module>adapter-diag</module>
         <module>adapter-stdout</module>
+
         <module>adapter-cqld4</module>
         <module>adapter-http</module>
         <module>adapter-tcp</module>
@@ -109,7 +69,10 @@
         <module>adapter-kafka</module>
         <module>adapter-amqp</module>
         <module>adapter-jdbc</module>
-        <module>adapter-pinecone</module>
+<!--        <module>adapter-pinecone</module>-->
+        <module>adapter-aws-opensearch</module>
+<!--        <module>adapter-milvus</module>-->
+
         <module>adapter-existdb</module>
         <module>adapter-xmlgen</module>
 
@@ -122,11 +85,160 @@
         <module>virtdata-lib-curves4</module>
         <module>virtdata-lib-realer</module>
         <module>virtdata-lib-hdf5</module>
+        <module>virtdata-lib-vectors</module>
         <module>virtdata-userlibs</module>
 
         <!-- Documentation -->
         <module>docsys</module>
     </modules>
+
+    <profiles>
+<!--        <profile>-->
+<!--            <id>build-adapter-cqld4</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-cqld4>true</build-adapter-cqld4>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-cqld4</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>build-adapter-milvus</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>false</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-milvus>true</build-adapter-milvus>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-milvus</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>build-adapter-dynamodb</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-dynamodb>true</build-adapter-dynamodb>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-dynamodb</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>build-adapter-http</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-http>true</build-adapter-http>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-http</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>build-adapter-tcp</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-tcp>true</build-adapter-tcp>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-tcp</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>build-adapter-pulsar</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-pulsar>true</build-adapter-pulsar>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-pulsar</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>build-adapter-kafka</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-kafka>true</build-adapter-kafka>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-kafka</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>build-adapter-amqp</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-amqp>true</build-adapter-amqp>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-amqp</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>build-adapter-jdbc</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-jdbc>true</build-adapter-jdbc>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-jdbc</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>build-adapter-mongodb</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-mongodb>true</build-adapter-mongodb>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-mongodb</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>build-adapter-aws-opensearch</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-aws-opensearch>true</build-adapter-aws-opensearch>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-aws-opensearch</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>build-adapter-s4j</id>-->
+<!--            <activation>-->
+<!--                <activeByDefault>true</activeByDefault>-->
+<!--            </activation>-->
+<!--            <properties>-->
+<!--                <build-adapter-s4j>true</build-adapter-s4j>-->
+<!--            </properties>-->
+<!--            <modules>-->
+<!--                <module>adapter-s4j</module>-->
+<!--            </modules>-->
+<!--        </profile>-->
+
+    </profiles>
 
     <licenses>
         <license>
@@ -145,21 +257,6 @@
                     <releaseProfiles>release</releaseProfiles>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.4.1</version>
-                <configuration>
-                </configuration>
-                <!-- NO Executions by default for main project builds.
-                     This plugin should be called directly on the command line
-                     The site plugin appears to be broken or at least not properly maintained,
-                     so invoking via the site phase is more trouble than it is worth.
-                     -->
-                <!--                <executions>-->
-                <!--                </executions>-->
             </plugin>
 
         </plugins>

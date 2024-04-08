@@ -14,7 +14,9 @@
   ~ limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
 
@@ -49,13 +51,7 @@
 
         <dependency>
             <groupId>io.nosqlbench</groupId>
-            <artifactId>adapter-tcp</artifactId>
-            <version>${revision}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.nosqlbench</groupId>
-            <artifactId>adapter-mongodb</artifactId>
+            <artifactId>adapter-diag</artifactId>
             <version>${revision}</version>
         </dependency>
 
@@ -67,40 +63,61 @@
 
         <dependency>
             <groupId>io.nosqlbench</groupId>
-            <artifactId>adapter-diag</artifactId>
+            <artifactId>adapter-cqld4</artifactId>
             <version>${revision}</version>
         </dependency>
-
         <dependency>
             <groupId>io.nosqlbench</groupId>
             <artifactId>adapter-dynamodb</artifactId>
             <version>${revision}</version>
         </dependency>
-
-        <dependency>
-            <groupId>io.nosqlbench</groupId>
-            <artifactId>adapter-cqld4</artifactId>
-            <version>${revision}</version>
-        </dependency>
-
         <dependency>
             <groupId>io.nosqlbench</groupId>
             <artifactId>adapter-http</artifactId>
             <version>${revision}</version>
         </dependency>
-
+        <dependency>
+            <groupId>io.nosqlbench</groupId>
+            <artifactId>adapter-tcp</artifactId>
+            <version>${revision}</version>
+        </dependency>
         <dependency>
             <groupId>io.nosqlbench</groupId>
             <artifactId>adapter-pulsar</artifactId>
             <version>${revision}</version>
         </dependency>
-
+        <dependency>
+            <groupId>io.nosqlbench</groupId>
+            <artifactId>adapter-kafka</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.nosqlbench</groupId>
+            <artifactId>adapter-amqp</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.nosqlbench</groupId>
+            <artifactId>adapter-jdbc</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.nosqlbench</groupId>
+            <artifactId>adapter-mongodb</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.nosqlbench</groupId>
+            <artifactId>adapter-aws-opensearch</artifactId>
+            <version>${revision}</version>
+        </dependency>
         <dependency>
             <groupId>io.nosqlbench</groupId>
             <artifactId>adapter-s4j</artifactId>
             <version>${revision}</version>
         </dependency>
 
+<<<<<<< HEAD
         <dependency>
             <groupId>io.nosqlbench</groupId>
             <artifactId>adapter-kafka</artifactId>
@@ -137,7 +154,10 @@
             <version>${revision}</version>
         </dependency>
 
+=======
+>>>>>>> upstream/main
     </dependencies>
+
 
     <build>
         <resources>
@@ -201,19 +221,6 @@
 
     <profiles>
         <profile>
-            <id>with-mongodb</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>io.nosqlbench</groupId>
-                    <artifactId>adapter-mongodb</artifactId>
-                    <version>${revision}</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
             <id>build-nb5-appimage</id>
             <activation>
                 <os>
@@ -249,9 +256,9 @@
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
+
             <build>
                 <plugins>
-
                     <plugin>
                         <executions>
                             <execution>
@@ -264,12 +271,249 @@
                         <artifactId>maven-enforcer-plugin</artifactId>
                         <configuration>
                             <rules>
-                                <dependencyConvergence />
+                                <dependencyConvergence/>
                             </rules>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
+
+        <!--        <profile>-->
+        <!--            <id>build-adapter-cqld4</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>build-adapter-cqld4</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-cqld4</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+
+        <!--        <profile>-->
+        <!--            <id>build-adapter-milvus</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>adapter-milvus</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-milvus</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>build-adapter-dynamodb</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>adapter-dynamodb</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-dynamodb</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>build-adapter-http</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>adapter-http</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-http</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>build-adapter-tcp</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>adapter-tcp</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-tcp</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>build-adapter-pulsar</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>adapter-pulsar</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-pulsar</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>build-adapter-kafka</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>adapter-kafka</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-kafka</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>build-adapter-amqp</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>adapter-amqp</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-amqp</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>build-adapter-jdbc</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>adapter-jdbc</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-jdbc</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>build-adapter-mongodb</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>adapter-mongodb</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-mongodb</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>build-adapter-aws-opensearch</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>adapter-aws-opensearch</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-aws-opensearch</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>build-adapter-s4j</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>adapter-s4j</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <dependencies>-->
+        <!--                <dependency>-->
+        <!--                    <groupId>io.nosqlbench</groupId>-->
+        <!--                    <artifactId>adapter-s4j</artifactId>-->
+        <!--                    <version>${revision}</version>-->
+        <!--                </dependency>-->
+        <!--            </dependencies>-->
+        <!--        </profile>-->
+
+
+        <!--        <dependency>-->
+        <!--            <groupId>io.nosqlbench</groupId>-->
+        <!--            <artifactId>adapter-dynamodb</artifactId>-->
+        <!--            <version>${revision}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.nosqlbench</groupId>-->
+        <!--            <artifactId>adapter-http</artifactId>-->
+        <!--            <version>${revision}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.nosqlbench</groupId>-->
+        <!--            <artifactId>adapter-tcp</artifactId>-->
+        <!--            <version>${revision}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.nosqlbench</groupId>-->
+        <!--            <artifactId>adapter-pulsar</artifactId>-->
+        <!--            <version>${revision}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.nosqlbench</groupId>-->
+        <!--            <artifactId>adapter-kafka</artifactId>-->
+        <!--            <version>${revision}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.nosqlbench</groupId>-->
+        <!--            <artifactId>adapter-amqp</artifactId>-->
+        <!--            <version>${revision}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.nosqlbench</groupId>-->
+        <!--            <artifactId>adapter-jdbc</artifactId>-->
+        <!--            <version>${revision}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.nosqlbench</groupId>-->
+        <!--            <artifactId>adapter-mongodb</artifactId>-->
+        <!--            <version>${revision}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.nosqlbench</groupId>-->
+        <!--            <artifactId>adapter-aws-opensearch</artifactId>-->
+        <!--            <version>${revision}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.nosqlbench</groupId>-->
+        <!--            <artifactId>adapter-s4j</artifactId>-->
+        <!--            <version>${revision}</version>-->
+        <!--        </dependency>-->
+
+
     </profiles>
+
 </project>
