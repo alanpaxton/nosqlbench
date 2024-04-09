@@ -27,6 +27,7 @@ scenarios:
     write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
   xmlgen:
+    #genall:    run driver=xmlgen tags==block:"genauction.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated xmlroot=site
     genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated xmlroot=site
     genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated xmlroot=site
 
@@ -49,7 +50,7 @@ bindings:
   lat: Uniform(-180d, 180d)
   lng: Hash() -> long; Uniform(-180d, 180d)
   friend_id: Add(-1); ToHashedUUID(); ToString() -> String
-  email: ListHashed(LastNames(), AlphaNumericString(16), FixedValue("@"), AlphaNumericString(4), FixedValue(".")); Join('')
+  email: ListHashed(LastNames(), AlphaNumericString(16), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
           
 
   # distribute generated XML over 1000 files, weighted heavily to the first few
@@ -193,8 +194,9 @@ blocks:
           # education: "{{WeightedStrings('Other:3,High School:10,College:10,Graduate School:4'}}",
           business: "{{WeightedStrings('Yes:1,No:2')}}",
         }
+        ratio: 2
         op: >2
-          "required by the system - we don't use it"
+          "generate person op - required by the system - we don't use it"
 
   genauctionitems:
     ops:
@@ -213,7 +215,7 @@ blocks:
           }
         ratio: 4
         op: >2
-          "required by the system - we don't use it"
+          "generate item op - required by the system - we don't use it"
 
       generate-mail:
         cycle: "{{Identity()}}"
@@ -228,7 +230,7 @@ blocks:
           }
         ratio: 4
         op: >2
-          "required by the system - we don't use it"
+          "generate mail op - required by the system - we don't use it"
 
 
   not-gen: # commented it out

@@ -22,18 +22,17 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.push.Document;
 import net.sf.saxon.s9api.push.Element;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class XMLGenDocBuilder implements AutoCloseable {
 
     private final Document document;
-    private final Element rootElement;
-    private List<PathEntry> elementPath = new ArrayList<>();
+    private final OpenElementTree openElementTree;
 
     public XMLGenDocBuilder(final Document document, final Element rootElement) {
         this.document = document;
-        this.rootElement = rootElement;
+        this.openElementTree = new OpenElementTree(rootElement);
     }
 
     /**
@@ -48,22 +47,7 @@ public class XMLGenDocBuilder implements AutoCloseable {
      */
     public Element element(final List<QName> createPath, final XMLGenElement elementContents) {
 
-        int pos = 0;
-        while(pos < elementPath.size() && pos < createPath.size() - 1) {
-            var qNameCreate = createPath.get(pos);
-            var qNameElement = elementPath.get(pos).qName;
-            if (!qNameElement.equals(qNameCreate)) break;
-            pos++;
-        }
-        final int elementsDiverge = pos;
-        for (int i = elementPath.size()-1; i >= elementsDiverge; i--) {
-            closeElement(i);
-        }
-        elementPath = new ArrayList<>(elementPath.subList(0, elementsDiverge));
-        for (int i = elementsDiverge; i < createPath.size(); i++) {
-            addElement(createPath.get(i));
-        }
-        final var element = elementPath.getLast().element();
+        final var element = openElementTree.replace(createPath);
         setContentsOfElement(element, elementContents);
         return element;
     }
@@ -72,32 +56,12 @@ public class XMLGenDocBuilder implements AutoCloseable {
      * Close all the elements currently open
      */
     public void close() {
-        for (int i = elementPath.size() - 1; i >= 0; i--) {
-            closeElement(i);
-        }
-        elementPath.clear();
+
+        openElementTree.close();
         try {
             document.close();
         } catch (SaxonApiException e) {
             throw new RuntimeException("Error closing document " + document, e);
-        }
-    }
-
-    private void closeElement(final int elementIndex) {
-        try {
-            elementPath.get(elementIndex).element.close();
-        } catch (SaxonApiException e) {
-            throw new RuntimeException("Error closing element " + elementPath.get(elementIndex), e);
-        }
-    }
-
-    private void addElement(QName qName) {
-
-        try {
-            final Element parent = elementPath.isEmpty() ? rootElement : elementPath.getLast().element();
-            elementPath.add(new PathEntry(parent.element(qName), qName));
-        } catch (SaxonApiException e) {
-            throw new RuntimeException("Error creating element " + qName, e);
         }
     }
 
@@ -107,7 +71,7 @@ public class XMLGenDocBuilder implements AutoCloseable {
             try {
                 element.attribute(attr.getKey(), attr.getValue().toString());
             } catch (SaxonApiException e) {
-                throw new RuntimeException("XML gen file attribute " + attr.getKey() + " on element " + elementPath, e);
+                throw new RuntimeException("XML gen file attribute " + attr.getKey(), e);
             }
         }
 
@@ -117,7 +81,7 @@ public class XMLGenDocBuilder implements AutoCloseable {
                 // TODO (AP) recursively define child elements with List<Map<String, Object>>
                 element.element(el.getKey()).text(el.getValue().toString()).close();
             } catch (SaxonApiException e) {
-                throw new RuntimeException("XML gen file element " + el.getKey() + " on element " + elementPath, e);
+                throw new RuntimeException("XML gen file element " + el.getKey(), e);
             }
         }
 
@@ -128,5 +92,73 @@ public class XMLGenDocBuilder implements AutoCloseable {
         }
     }
 
-    record PathEntry (Element element, QName qName) {}
+    /**
+     * Keep multiple elements open for update
+     */
+    static private class OpenElementTree {
+
+        Element element;
+
+        HashMap<QName, OpenElementTree> children;
+
+        OpenElementTree(final Element element) {
+            this.element = element;
+            this.children = HashMap.newHashMap(2);
+        }
+
+        /**
+         * Close the element on the path, and all its children
+         * @param path
+         */
+        void close(List<QName> path) {
+            if (path.isEmpty()) {
+                for (var child : children.values()) {
+                    child.close(path);
+                }
+                try {
+                    element.close();
+                } catch (SaxonApiException e) {
+                    throw new RuntimeException("Error closing element: " + element, e);
+                }
+                children.clear();
+            } else {
+                var key = path.getFirst();
+                var subTree = children.get(key);
+                if (subTree != null) {
+                    subTree.close(path.subList(1, path.size()));
+                }
+                if (path.size() == 1) {
+                    children.remove(key);
+                }
+            }
+        }
+
+        void close() {
+            close(List.of());
+        }
+
+        Element open(List<QName> path) {
+            if (path.isEmpty()) {
+                return element;
+            }
+            var key = path.getFirst();
+            var subTree = children.get(key);
+            if (subTree == null) {
+                Element keyElement = null;
+                try {
+                    keyElement = element.element(key);
+                } catch (SaxonApiException e) {
+                    throw new RuntimeException("Error creating element " + key + " " + e.getMessage(), e);
+                }
+                subTree = new OpenElementTree(keyElement);
+                children.put(key, subTree);
+            }
+            return subTree.open(path.subList(1, path.size()));
+        }
+
+        Element replace(List<QName> path) {
+            close(path);
+            return open(path);
+        }
+    }
 }

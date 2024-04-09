@@ -70,7 +70,11 @@ public class XMLGenSpace implements NBNamedElement, AutoCloseable {
 
     public void createXMLGenContext(final String directorypath, final String rootNode) {
 
-        this.xmlGenContext = new XMLGenContext(directorypath, rootNode);
+        synchronized (this) {
+            if (xmlGenContext == null) {
+                xmlGenContext = new XMLGenContext(directorypath, rootNode);
+            }
+        }
     }
 
     public XMLGenContext getXMLGenContext() {
