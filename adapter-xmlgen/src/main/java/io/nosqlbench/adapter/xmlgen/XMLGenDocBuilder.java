@@ -74,6 +74,11 @@ public class XMLGenDocBuilder implements AutoCloseable {
             closeElement(i);
         }
         elementPath.clear();
+        try {
+            document.close();
+        } catch (SaxonApiException e) {
+            throw new RuntimeException("Error closing document " + document, e);
+        }
     }
 
     private void closeElement(final int elementIndex) {

@@ -20,6 +20,7 @@ package io.nosqlbench.adapter.xmlgen;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -132,7 +133,9 @@ public class XMLGenContext implements AutoCloseable {
                 throw new RuntimeException("XML gen file " + file + " could not be created.", e);
             }
             try {
-                final var pushDocument = getProcesser().newPush(getProcesser().newSerializer(file)).document(true);
+                final var serializer = getProcesser().newSerializer(file);
+                serializer.setOutputProperty(Serializer.Property.INDENT, "yes");
+                final var pushDocument = getProcesser().newPush(serializer).document(true);
                 return new XMLGenDocBuilder(pushDocument, pushDocument.element(rootNode));
             } catch (SaxonApiException e) {
                 throw new RuntimeException("XML gen file " + file + " could not create serialization.");
