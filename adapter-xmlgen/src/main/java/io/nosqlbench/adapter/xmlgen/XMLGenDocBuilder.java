@@ -50,7 +50,9 @@ public class XMLGenDocBuilder implements AutoCloseable {
 
         int pos = 0;
         while(pos < elementPath.size() && pos < createPath.size() - 1) {
-            if (!elementPath.get(pos).element.equals(createPath.get(pos))) break;
+            var qNameCreate = createPath.get(pos);
+            var qNameElement = elementPath.get(pos).qName;
+            if (!qNameElement.equals(qNameCreate)) break;
             pos++;
         }
         final int elementsDiverge = pos;
