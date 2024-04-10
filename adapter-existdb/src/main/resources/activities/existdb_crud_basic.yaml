@@ -27,9 +27,8 @@ scenarios:
     write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
   xmlgen:
-    #genall:    run driver=xmlgen tags==block:"genauction.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated xmlroot=site
-    genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated xmlroot=site
-    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated xmlroot=site
+    genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
+    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
 
 bindings:
 
@@ -58,6 +57,9 @@ bindings:
   # PD (probability density) for x=10 tells us 9.5% of data lands in the first 10 files
   # PD x=1 -> 0.01, x=10 -> 0.095, x=100 -> 0.632, x=1000 -> 0.9999
   xml_file_id: Exponential(100); ModuloToLong(1000)
+
+  # For item generation
+  item_quantity: Hash(); Exponential(10); ModuloToLong(10); Add(1)
 
 blocks:
 
@@ -209,9 +211,9 @@ blocks:
           }
         children:
           { location: "{{CountryNames()}}",
-            quantity: "{{Exponential(10)}}",
-            name: "{{Zipf(100,2); NumberNameToString())}}",
-            payment: "{{}}"
+            quantity: "{item_quantity}",
+            name: "{{ListSizedHashed(Zipf(100,1.2), CitiesByPopulation(), StateNamesByPopulation()); Join(' ')}}",
+            payment: "{{SetSizedHashed(HashRange(1,4),WeightedStrings('Cash:20;Personal check:8;Creditcard:4;Money order:2')); Join(' ')}}"
           }
         ratio: 4
         op: >2
