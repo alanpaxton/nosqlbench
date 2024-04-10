@@ -221,6 +221,10 @@ blocks:
             shipping: "{shipping_options}",
             description: {
               text: "{{MobyDick()}}"
+            },
+            expandedlist: "{{ListSizedHashed(FixedValue(5),CitiesByPopulation())}}",
+            list: {
+              listitem: "{{}}"
             }
           }
         ratio: 4

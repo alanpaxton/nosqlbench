@@ -77,11 +77,15 @@ public class XMLGenDocBuilder implements AutoCloseable {
         }
 
         for (var el : elementContents.children().entrySet()) {
-            try {
-                // add a recursive element and close it
-                setContentsOfChild(element.element(el.getKey()),el.getValue()).close();
-            } catch (SaxonApiException e) {
-                throw new RuntimeException("XML gen file element " + el.getKey(), e);
+            // add a recursive element and close it
+            // if it is a list of values, turn it into a sequence of elements, one per list item
+            var value = el.getValue();
+            if (value instanceof List<?> values) {
+                for (var instance : values) {
+                    createChildOfElement(element, el.getKey(), instance);
+                }
+            } else {
+                createChildOfElement(element, el.getKey(), value);
             }
         }
 
@@ -98,7 +102,7 @@ public class XMLGenDocBuilder implements AutoCloseable {
      * @param contents the map, or simple value, to set the contents to
      * @return the input element, after contents have been set
      */
-    private Element setContentsOfChild(final Element element, final Object contents) {
+    private Element createChildOfElement(final Element element, final String label, final Object contents) {
         if (contents instanceof Map<?,?> contentMap) {
             Map<String, Object> children = HashMap.newHashMap(4);
             Map<String, Object> attrs = HashMap.newHashMap(4);
@@ -108,7 +112,7 @@ public class XMLGenDocBuilder implements AutoCloseable {
             }
             if (contentMap.containsKey("children")) {
                 var explicitChildren = contentMap.remove("children");
-                if (explicitChildren instanceof Map<?,?> childrenMap) {
+                if (explicitChildren instanceof Map<?, ?> childrenMap) {
                     for (var child : childrenMap.entrySet()) {
                         children.put((String) child.getKey(), child.getValue());
                     }
@@ -116,7 +120,7 @@ public class XMLGenDocBuilder implements AutoCloseable {
             }
             if (contentMap.containsKey("attrs")) {
                 var explicitAttrs = contentMap.remove("attrs");
-                if (explicitAttrs instanceof Map<?,?> attrsMap) {
+                if (explicitAttrs instanceof Map<?, ?> attrsMap) {
                     for (var attr : attrsMap.entrySet()) {
                         attrs.put((String) attr.getKey(), attr.getValue());
                     }
@@ -125,16 +129,22 @@ public class XMLGenDocBuilder implements AutoCloseable {
             // Entries in the map with all other keys are considered children
             children.putAll((Map<? extends String, ?>) contentMap);
 
-            // Use the 
-            setContentsOfElement(element, new XMLGenElement(children, attrs, body));
+            try {
+                var child = element.element(label);
+                setContentsOfElement(child, new XMLGenElement(children, attrs, body));
+                return child;
+            } catch (SaxonApiException e) {
+                throw new RuntimeException("XML gen file element child of " + element + " as: " + contents, e);
+            }
         } else {
             try {
-                element.text(contents.toString());
+                var child = element.element(label);
+                child.text(contents.toString());
+                return child;
             } catch (SaxonApiException e) {
                 throw new RuntimeException("XML gen file element contents of " + element + " as: " + contents, e);
             }
         }
-        return element;
     }
 
     /**
