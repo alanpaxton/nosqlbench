@@ -82,7 +82,8 @@ public class ServiceSelector<T> implements Predicate<ServiceLoader.Provider<? ex
                     if (l.type().getAnnotation(Service.class) == null) {
                         throw new RuntimeException(
                             "Annotator services must be annotated with distinct selectors\n" +
-                                "such as @Selector(\"myimpl42\")"
+                                "such as @Selector(\"myimpl42\")\n" +
+                                "on [" + l + "]"
                         );
                     }
                 }
