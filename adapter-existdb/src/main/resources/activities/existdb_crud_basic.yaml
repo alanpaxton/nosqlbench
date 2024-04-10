@@ -218,7 +218,7 @@ blocks:
             quantity: "{item_quantity}",
             name: "{item_name}",
             payment: "{payment_options}",
-            shipping: "{shipping_options}"
+            shipping: "{shipping_options}",
           }
         ratio: 4
         op: >2
@@ -233,7 +233,7 @@ blocks:
             from: "{{FullNames()}}",
             to: "{{Add(-1); FullNames()}}",
             date: "{email_date}",
-            text: "{{MobyDick()}}"
+            text: "{{Shakespeare()}}"
           }
         ratio: 4
         op: >2
