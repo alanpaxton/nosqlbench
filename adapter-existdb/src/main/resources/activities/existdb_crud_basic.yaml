@@ -60,6 +60,10 @@ bindings:
 
   # For item generation
   item_quantity: Hash(); Exponential(10); ModuloToLong(10); Add(1)
+  item_name: ListSizedHashed(Zipf(100,1.2), CitiesByPopulation(), StateNamesByPopulation()); Join(' ')
+  payment_options: SetSizedHashed(HashRange(1,4),WeightedStrings('Cash:20;Personal check:8;Creditcard:4;Money order:2')); Join(', ')
+  email_date: Hash(); Uniform(0,30000000); ToDate(86400000,1440); ToString()
+  shipping_options: Hash(); WeightedStrings('Will ship only within country:2;Will ship only within country, Buyer pays fixed shipping charges, See description for charges:1;Will ship internationally:1')
 
 blocks:
 
@@ -212,8 +216,9 @@ blocks:
         children:
           { location: "{{CountryNames()}}",
             quantity: "{item_quantity}",
-            name: "{{ListSizedHashed(Zipf(100,1.2), CitiesByPopulation(), StateNamesByPopulation()); Join(' ')}}",
-            payment: "{{SetSizedHashed(HashRange(1,4),WeightedStrings('Cash:20;Personal check:8;Creditcard:4;Money order:2')); Join(' ')}}"
+            name: "{item_name}",
+            payment: "{payment_options}",
+            shipping: "{shipping_options}"
           }
         ratio: 4
         op: >2
@@ -227,32 +232,13 @@ blocks:
           {
             from: "{{FullNames()}}",
             to: "{{Add(-1); FullNames()}}",
-            date: "{{ToDateTime(); ToString()}}",
+            date: "{email_date}",
             text: "{{MobyDick()}}"
           }
         ratio: 4
         op: >2
           "generate mail op - required by the system - we don't use it"
 
-
-  not-gen: # commented it out
-    ops:
-      # generate2:
-      #   body: "{{ListSizedHashed(Identity(), StateNamesByPopulation()); ToString()}}"
-      generate-items:
-        file: "{xml_file_id}"
-        element: "items"
-        body: ""
-        elements:
-          quantity: "{{HashInterval(1,100)}}"
-          productName: "{{StateNamesByPopulation()}}"
-        attrs:
-          { uid: "{user_id}",
-            partNum: "{{}}"
-          }
-        op: >2
-          "required by the system - we don't use it"
-          
   read:
     ops:
       read-document: >2
