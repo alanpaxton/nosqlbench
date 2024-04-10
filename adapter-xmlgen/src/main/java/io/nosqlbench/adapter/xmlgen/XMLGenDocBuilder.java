@@ -24,6 +24,7 @@ import net.sf.saxon.s9api.push.Element;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class XMLGenDocBuilder implements AutoCloseable {
 
@@ -77,9 +78,8 @@ public class XMLGenDocBuilder implements AutoCloseable {
 
         for (var el : elementContents.children().entrySet()) {
             try {
-                // add a simple element and close it
-                // TODO (AP) recursively define child elements with List<Map<String, Object>>
-                element.element(el.getKey()).text(el.getValue().toString()).close();
+                // add a recursive element and close it
+                setContentsOfChild(element.element(el.getKey()),el.getValue()).close();
             } catch (SaxonApiException e) {
                 throw new RuntimeException("XML gen file element " + el.getKey(), e);
             }
@@ -90,6 +90,51 @@ public class XMLGenDocBuilder implements AutoCloseable {
         } catch (SaxonApiException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Fluent method to set contents of an element recursively
+     * @param element the contents of which to set
+     * @param contents the map, or simple value, to set the contents to
+     * @return the input element, after contents have been set
+     */
+    private Element setContentsOfChild(final Element element, final Object contents) {
+        if (contents instanceof Map<?,?> contentMap) {
+            Map<String, Object> children = HashMap.newHashMap(4);
+            Map<String, Object> attrs = HashMap.newHashMap(4);
+            String body = "";
+            if (contentMap.containsKey("body")) {
+                body = (String) contentMap.remove("body");
+            }
+            if (contentMap.containsKey("children")) {
+                var explicitChildren = contentMap.remove("children");
+                if (explicitChildren instanceof Map<?,?> childrenMap) {
+                    for (var child : childrenMap.entrySet()) {
+                        children.put((String) child.getKey(), child.getValue());
+                    }
+                }
+            }
+            if (contentMap.containsKey("attrs")) {
+                var explicitAttrs = contentMap.remove("attrs");
+                if (explicitAttrs instanceof Map<?,?> attrsMap) {
+                    for (var attr : attrsMap.entrySet()) {
+                        attrs.put((String) attr.getKey(), attr.getValue());
+                    }
+                }
+            }
+            // Entries in the map with all other keys are considered children
+            children.putAll((Map<? extends String, ?>) contentMap);
+
+            // Use the 
+            setContentsOfElement(element, new XMLGenElement(children, attrs, body));
+        } else {
+            try {
+                element.text(contents.toString());
+            } catch (SaxonApiException e) {
+                throw new RuntimeException("XML gen file element contents of " + element + " as: " + contents, e);
+            }
+        }
+        return element;
     }
 
     /**
