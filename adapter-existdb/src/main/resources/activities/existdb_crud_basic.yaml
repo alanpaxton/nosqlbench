@@ -27,8 +27,9 @@ scenarios:
     write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
   xmlgen:
-    genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
-    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
+    #genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
+    #genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
+    gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(write-cycles,TEMPLATE(categoriescount,1000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
 
 bindings:
 
@@ -65,6 +66,8 @@ bindings:
   email_date: Hash(); Uniform(0,30000000); ToDate(86400000,1440); ToString()
   shipping_options: Hash(); WeightedStrings('Will ship only within country:2;Will ship only within country, Buyer pays fixed shipping charges, See description for charges:1;Will ship internationally:1')
 
+  category_name: ListSizedHashed(Zipf(100,1.4), CountryNames()); Join(' ')
+  
 blocks:
 
   schema:
@@ -184,6 +187,23 @@ blocks:
         count: "{{Identity()}}"
         ratio: 4
 
+  genauctioncategories:
+    ops:
+      generate-category:
+        file: "{xml_file_id}"
+        path: ["categories", "category"]
+        attrs: {
+          id: "category{{Identity()}}"
+        }
+        children: {
+          name: "{category_name}",
+          description: {
+              text: "{{MobyDick()}}"
+            }
+        }
+        op: >2
+          "generate category op - required by the system - we don't use it"
+
   genauctionpeople:
     ops:
       generate-person:
@@ -227,7 +247,7 @@ blocks:
               listitem: "{{}}"
             }
           }
-        ratio: 4
+        ratio: 1
         op: >2
           "generate item op - required by the system - we don't use it"
 
