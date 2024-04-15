@@ -28,8 +28,8 @@ scenarios:
 
   xmlgen:
     #genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
-    #genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
-    gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(write-cycles,TEMPLATE(categoriescount,1000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
+    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
+    #gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(write-cycles,TEMPLATE(categoriescount,1000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
 
 bindings:
 
@@ -58,6 +58,8 @@ bindings:
   # PD (probability density) for x=10 tells us 9.5% of data lands in the first 10 files
   # PD x=1 -> 0.01, x=10 -> 0.095, x=100 -> 0.632, x=1000 -> 0.9999
   xml_file_id: Exponential(100); ModuloToLong(1000)
+  # file id of the previous generated element
+  prev_file_id: Add(-1); Exponential(100); ModuloToLong(1000)
 
   # For item generation
   item_quantity: Hash(); Exponential(10); ModuloToLong(10); Add(1)
@@ -67,6 +69,9 @@ bindings:
   shipping_options: Hash(); WeightedStrings('Will ship only within country:2;Will ship only within country, Buyer pays fixed shipping charges, See description for charges:1;Will ship internationally:1')
 
   category_name: ListSizedHashed(Zipf(100,1.4), CountryNames()); Join(' ')
+
+  # For person generation
+  profile_education: Hash(); WeightedStrings('Other:3,High School:10,College:10,Graduate School:4')
   
 blocks:
 
@@ -213,16 +218,33 @@ blocks:
         attrs:
           { id: "person{{Identity()}}",
             city: "{{CitiesByPopulation()}}",
+            identity: "{{Identity()}}",
+            identity_id: "{xml_file_id}"
           }
         children: {
           name: "{{FullNames()}}",
-          email: "{email}",
-          # education: "{{WeightedStrings('Other:3,High School:10,College:10,Graduate School:4'}}",
-          business: "{{WeightedStrings('Yes:1,No:2')}}",
+          email: "{email}"
         }
-        ratio: 2
         op: >2
           "generate person op - required by the system - we don't use it"
+      generate-profile:
+        file: "{prev_file_id}"
+        path: ["people", "person", "profile"]
+        attrs:
+          { income: "{{HashRange(1000000,10000000); ToDouble(); Div(100.0)}}",
+            identity: "{{Identity()}}",
+            identity_id: "{xml_file_id}",
+            identity_prev_id: "{prev_file_id}",
+          }
+        children: {
+          interest: {
+            attrs: { category: "category{{Identity()}}" }
+          },
+          education: "{profile_education}",
+          business: "{{WeightedStrings('Yes:1,No:2')}}"
+        }
+        op: >2
+          "generate profile op - required by the system - we don't use it"
 
   genauctionitems:
     ops:
