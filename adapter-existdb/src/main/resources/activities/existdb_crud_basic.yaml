@@ -43,14 +43,17 @@ bindings:
   user_id: ToHashedUUID(); ToString() -> String
   created_on: Uniform(1262304000,1577836800) -> long
   gender: WeightedStrings('M:10;F:10;O:1')
-  full_name: FullNames()
+  full_name: ListSized(FixedValue(2), FirstNames(), LastNames()); Join(' ')
+  last_name: LastNames()
   married: ModuloToBoolean()
   city: Cities()
   country_code: CountryCodes()
   lat: Uniform(-180d, 180d)
   lng: Hash() -> long; Uniform(-180d, 180d)
   friend_id: Add(-1); ToHashedUUID(); ToString() -> String
-  email: ListHashed(LastNames(), AlphaNumericString(16), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
+  email: ListStepped(LastNames(), AlphaNumericString(16), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
+  homepage: ListStepped(FixedValue("https://www."), WeightedStrings('geocities:1,yahoo:2'), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
+  street: ListStepped(ToString(Uniform(1,10000)), Counties(), WeightedStrings('Street:3,Road:2')); Join(' ')
           
 
   # distribute generated XML over 1000 files, weighted heavily to the first few
@@ -72,6 +75,10 @@ bindings:
 
   # For person generation
   profile_education: Hash(); WeightedStrings('Other:3,High School:10,College:10,Graduate School:4')
+  # 1000 is the range of open auctions - can we reference another binding in this binding ?
+  auction_ref : ListSizedStepped(HashRange(0,10),HashRange(1,1000))
+  cc_num : ListSizedStepped(FixedValue(4),HashRange(1000,9999)); Join(' ')
+  phone_num : ListSizedStepped(FixedValue(11),HashRange(0,9)); Join('')
   
 blocks:
 
@@ -217,34 +224,44 @@ blocks:
         path: ["people", "person"]
         attrs:
           { id: "person{{Identity()}}",
-            city: "{{CitiesByPopulation()}}",
-            identity: "{{Identity()}}",
-            identity_id: "{xml_file_id}"
+            city: "{{CitiesByPopulation()}}"
           }
         children: {
-          name: "{{FullNames()}}",
-          email: "{email}"
+          name: "{full_name}",
+          emailaddress: "{email}",
+          phone: "{phone_num}",
+          homepage: "{homepage}/{last_name}",
+          creditcard: "{cc_num}",
+          address: {
+            street: "{street}",
+            city: "{{CitiesByPopulation()}}",
+            county: "{{CountiesByPopulation()}}",
+            zipcode: "{{ZipCodesByPopulation()}}"
+          },
+          profile:
+          {
+            attrs: {
+              income: "{{HashRange(1000000,10000000); ToDouble(); Div(100.0)}}"
+            },
+            # TODO (AP) - a list of <interest>, each with a category attribute
+            interest: {
+              attrs: { category: "category{{Identity()}}" }
+            },
+            education: "{profile_education}",
+            business: "{{WeightedStrings('Yes:1,No:2')}}"
+          },
+          watches: {
+            # TODO (AP) - a list of <watch>, each with an open_auction attribute
+            watch: {
+              foreach: "{auction_ref}",
+              attrs: {
+                open_auction: "open_auction__1__"
+              }
+            }
+          }
         }
         op: >2
           "generate person op - required by the system - we don't use it"
-      generate-profile:
-        file: "{prev_file_id}"
-        path: ["people", "person", "profile"]
-        attrs:
-          { income: "{{HashRange(1000000,10000000); ToDouble(); Div(100.0)}}",
-            identity: "{{Identity()}}",
-            identity_id: "{xml_file_id}",
-            identity_prev_id: "{prev_file_id}",
-          }
-        children: {
-          interest: {
-            attrs: { category: "category{{Identity()}}" }
-          },
-          education: "{profile_education}",
-          business: "{{WeightedStrings('Yes:1,No:2')}}"
-        }
-        op: >2
-          "generate profile op - required by the system - we don't use it"
 
   genauctionitems:
     ops:
