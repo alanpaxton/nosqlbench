@@ -188,10 +188,19 @@ public class XMLGenDocBuilder implements AutoCloseable {
             }
         }
 
+        /**
+         * Close the entire tree
+         */
         void close() {
             close(List.of());
         }
 
+        /**
+         * Open a path, creating subtree(s) as necessary
+         *
+         * @param path to open
+         * @return the element on the path
+         */
         Element open(List<QName> path) {
             if (path.isEmpty()) {
                 return element;
