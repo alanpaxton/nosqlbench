@@ -21,7 +21,11 @@ import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.push.Document;
 import net.sf.saxon.s9api.push.Element;
+import org.apache.commons.lang3.tuple.Pair;
+import org.checkerframework.checker.units.qual.A;
 
+import java.security.Key;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +106,8 @@ public class XMLGenDocBuilder implements AutoCloseable {
      * @param contents the map, or simple value, to set the contents to
      * @return the input element, after contents have been set
      */
-    private Element createChildOfElement(final Element element, final String label, final Object contents) {
+    private List<Element> createChildOfElement(final Element element, final String label, final Object contents) {
+        var result = new ArrayList<Element>(1);
         if (contents instanceof Map<?,?> contentMap) {
             Map<String, Object> children = HashMap.newHashMap(4);
             Map<String, Object> attrs = HashMap.newHashMap(4);
@@ -126,25 +131,49 @@ public class XMLGenDocBuilder implements AutoCloseable {
                     }
                 }
             }
+
+            // Create as many siblings as there are entries in this list
+            // Usually 1, special case is __foreach
+            List<XMLGenElement> createSiblings = new ArrayList<>(1);
+            var explicitForeach = contentMap.remove(Keyword.FOREACH.label);
+
             // Entries in the map with all other keys are considered children
             children.putAll((Map<? extends String, ?>) contentMap);
 
+            var xmlgenElement = new XMLGenElement(children, attrs, body);
+            if (explicitForeach == null) {
+                createSiblings.add(xmlgenElement);
+            } else {
+                if (explicitForeach instanceof  List<?> foreachList) {
+                    for (var foreachItem : foreachList) {
+                        createSiblings.add(xmlgenElement.substitute(List.of(Pair.of(foreachItem,"__1__"))));
+                    }
+                } else {
+                    throw new RuntimeException("XML gen file element child of " + element + " as: " + contents +
+                        " " + Keyword.FOREACH.label + " value is not a list");
+                }
+            }
+
             try {
-                var child = element.element(label);
-                setContentsOfElement(child, new XMLGenElement(children, attrs, body));
-                return child;
+                for (var create : createSiblings) {
+                    var child = element.element(label);
+                    setContentsOfElement(child, create);
+                    result.add(child);
+                }
             } catch (SaxonApiException e) {
                 throw new RuntimeException("XML gen file element child of " + element + " as: " + contents, e);
             }
         } else {
+            // non-map case, just terminate here with a simple element
             try {
                 var child = element.element(label);
                 child.text(contents.toString());
-                return child;
+                result.add(child);
             } catch (SaxonApiException e) {
                 throw new RuntimeException("XML gen file element contents of " + element + " as: " + contents, e);
             }
         }
+        return result;
     }
 
 }

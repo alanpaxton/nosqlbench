@@ -17,6 +17,7 @@ package io.nosqlbench.adapter.xmlgen;
  * under the License.
  */
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,4 +28,8 @@ import java.util.Map;
  * @param body
  */
 public record XMLGenElement(Map<String, Object> children, Map<String, Object> attrs, String body) {
+    public XMLGenElement substitute(final List<Object> substitutions) {
+        //TODO (AP) substitutions - currently a no-op
+        return this;
+    }
 }

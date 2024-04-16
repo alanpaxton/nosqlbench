@@ -28,7 +28,7 @@ scenarios:
 
   xmlgen:
     #genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
-    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
+    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,1000000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
     #gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(write-cycles,TEMPLATE(categoriescount,1000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
 
 bindings:
@@ -184,7 +184,7 @@ blocks:
         file: "{xml_file_id}"
         # currently only generating elements at top level
         element: "w"
-        attrs:
+        __attrs:
           { uid: "{user_id}",
             count: "{{Identity()}}",
             pos: "{{WeightedStrings('c:20;z:8;n:4;p:2;d;Dx:3')}}",
@@ -195,7 +195,7 @@ blocks:
             map: "{{MapSizedStepped(Zipf(100,2), Identity(), NumberNameToString())}}",
             s: "{{NumberNameToString()}}",
           }
-        body: "{{MobyDick()}}"
+        __body: "{{MobyDick()}}"
         count: "{{Identity()}}"
         ratio: 4
 
@@ -204,10 +204,10 @@ blocks:
       generate-category:
         file: "{xml_file_id}"
         path: ["categories", "category"]
-        attrs: {
+        __attrs: {
           id: "category{{Identity()}}"
         }
-        children: {
+        __children: {
           name: "{category_name}",
           description: {
               text: "{{MobyDick()}}"
@@ -222,11 +222,11 @@ blocks:
         cycle: "{{Identity()}}"
         file: "{xml_file_id}"
         path: ["people", "person"]
-        attrs:
+        __attrs:
           { id: "person{{Identity()}}",
             city: "{{CitiesByPopulation()}}"
           }
-        children: {
+        __children: {
           name: "{full_name}",
           emailaddress: "{email}",
           phone: "{phone_num}",
@@ -240,12 +240,12 @@ blocks:
           },
           profile:
           {
-            attrs: {
+            __attrs: {
               income: "{{HashRange(1000000,10000000); ToDouble(); Div(100.0)}}"
             },
             # TODO (AP) - a list of <interest>, each with a category attribute
             interest: {
-              attrs: { category: "category{{Identity()}}" }
+              __attrs: { category: "category{{Identity()}}" }
             },
             education: "{profile_education}",
             business: "{{WeightedStrings('Yes:1,No:2')}}"
@@ -253,8 +253,8 @@ blocks:
           watches: {
             # TODO (AP) - a list of <watch>, each with an open_auction attribute
             watch: {
-              foreach: "{auction_ref}",
-              attrs: {
+              __foreach: "{auction_ref}",
+              __attrs: {
                 open_auction: "open_auction__1__"
               }
             }
@@ -269,10 +269,10 @@ blocks:
         cycle: "{{Identity()}}"
         file: "{xml_file_id}"
         path: ["regions", "africa", "item"]
-        attrs:
+        __attrs:
           { id: "item{{Identity()}}",
           }
-        children:
+        __children:
           { location: "{{CountryNames()}}",
             quantity: "{item_quantity}",
             name: "{item_name}",
@@ -294,7 +294,7 @@ blocks:
         cycle: "{{Identity()}}"
         file: "{xml_file_id}"
         path: ["regions", "africa", "item", "mailbox", "mail"]
-        children:
+        __children:
           {
             from: "{{FullNames()}}",
             to: "{{Add(-1); FullNames()}}",
