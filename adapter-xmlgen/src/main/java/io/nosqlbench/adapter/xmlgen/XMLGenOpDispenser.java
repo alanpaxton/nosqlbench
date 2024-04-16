@@ -36,14 +36,14 @@ public class XMLGenOpDispenser extends BaseOpDispenser<XMLGenOp, XMLGenSpace>  {
 
     private LongFunction<XMLGenOp> createOpFunc(LongFunction<XMLGenSpace> contextFn, ParsedOp op) {
 
-        LongFunction<?> content = op.getAsRequiredFunction("stmt", Object.class);
+        LongFunction<?> content = op.getAsRequiredFunction(Keyword.STMT.label, Object.class);
 
-        var children = op.getAsRequiredFunction("children", Map.class);
-        LongFunction<Map<String, Object>> attrs = op.getAsFunctionOr("attrs", Map.of());
-        var file = op.getAsRequiredFunction("file", Long.class);
-        var body = op.getAsFunctionOr("body", "");
+        var children = op.getAsRequiredFunction(Keyword.CHILDREN.label, Map.class);
+        LongFunction<Map<String, Object>> attrs = op.getAsFunctionOr(Keyword.ATTRS.label, Map.of());
+        var file = op.getAsRequiredFunction(Keyword.FILE.label, Long.class);
+        var body = op.getAsFunctionOr(Keyword.BODY.label, "");
 
-        var path = op.getAsRequiredFunction("path", List.class);
+        var path = op.getAsRequiredFunction(Keyword.PATH.label, List.class);
 
         return l -> new XMLGenOp(
             contextFn.apply(l).getXMLGenContext(),

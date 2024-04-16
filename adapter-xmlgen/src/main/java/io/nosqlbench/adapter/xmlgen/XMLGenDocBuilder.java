@@ -107,19 +107,19 @@ public class XMLGenDocBuilder implements AutoCloseable {
             Map<String, Object> children = HashMap.newHashMap(4);
             Map<String, Object> attrs = HashMap.newHashMap(4);
             String body = "";
-            if (contentMap.containsKey("body")) {
-                body = (String) contentMap.remove("body");
+            if (contentMap.containsKey(Keyword.BODY.label)) {
+                body = (String) contentMap.remove(Keyword.BODY.label);
             }
-            if (contentMap.containsKey("children")) {
-                var explicitChildren = contentMap.remove("children");
+            if (contentMap.containsKey(Keyword.CHILDREN.label)) {
+                var explicitChildren = contentMap.remove(Keyword.CHILDREN.label);
                 if (explicitChildren instanceof Map<?, ?> childrenMap) {
                     for (var child : childrenMap.entrySet()) {
                         children.put((String) child.getKey(), child.getValue());
                     }
                 }
             }
-            if (contentMap.containsKey("attrs")) {
-                var explicitAttrs = contentMap.remove("attrs");
+            if (contentMap.containsKey(Keyword.ATTRS.label)) {
+                var explicitAttrs = contentMap.remove(Keyword.ATTRS.label);
                 if (explicitAttrs instanceof Map<?, ?> attrsMap) {
                     for (var attr : attrsMap.entrySet()) {
                         attrs.put((String) attr.getKey(), attr.getValue());
@@ -147,82 +147,4 @@ public class XMLGenDocBuilder implements AutoCloseable {
         }
     }
 
-    /**
-     * Keep multiple elements open for update
-     */
-    static private class OpenElementTree {
-
-        Element element;
-
-        HashMap<QName, OpenElementTree> children;
-
-        OpenElementTree(final Element element) {
-            this.element = element;
-            this.children = HashMap.newHashMap(2);
-        }
-
-        /**
-         * Close the element on the path, and all its children
-         * @param path
-         */
-        void close(List<QName> path) {
-            if (path.isEmpty()) {
-                for (var child : children.values()) {
-                    child.close(path);
-                }
-                try {
-                    element.close();
-                } catch (SaxonApiException e) {
-                    throw new RuntimeException("Error closing element: " + element, e);
-                }
-                children.clear();
-            } else {
-                var key = path.getFirst();
-                var subTree = children.get(key);
-                if (subTree != null) {
-                    subTree.close(path.subList(1, path.size()));
-                }
-                if (path.size() == 1) {
-                    children.remove(key);
-                }
-            }
-        }
-
-        /**
-         * Close the entire tree
-         */
-        void close() {
-            close(List.of());
-        }
-
-        /**
-         * Open a path, creating subtree(s) as necessary
-         *
-         * @param path to open
-         * @return the element on the path
-         */
-        Element open(List<QName> path) {
-            if (path.isEmpty()) {
-                return element;
-            }
-            var key = path.getFirst();
-            var subTree = children.get(key);
-            if (subTree == null) {
-                Element keyElement = null;
-                try {
-                    keyElement = element.element(key);
-                } catch (SaxonApiException e) {
-                    throw new RuntimeException("Error creating element " + key + " " + e.getMessage(), e);
-                }
-                subTree = new OpenElementTree(keyElement);
-                children.put(key, subTree);
-            }
-            return subTree.open(path.subList(1, path.size()));
-        }
-
-        Element replace(List<QName> path) {
-            close(path);
-            return open(path);
-        }
-    }
 }
