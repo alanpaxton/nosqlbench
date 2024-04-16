@@ -28,7 +28,7 @@ scenarios:
 
   xmlgen:
     #genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
-    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
+    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,100000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
     #gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(write-cycles,TEMPLATE(categoriescount,1000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
 
 bindings:
@@ -81,7 +81,12 @@ bindings:
   category_ref : ListSizedStepped(HashRange(0,10),HashRange(1,1000))
   cc_num : ListSizedStepped(FixedValue(4),HashRange(1000,9999)); Join(' ')
   phone_num : ListSizedStepped(FixedValue(11),HashRange(0,9)); Join('')
-  optional_age: ListSizedStepped(HashRange(2),HashRange(18,100))
+
+  # generate an optional value by generating a list of 0 or 1 size,
+  # then use that to generate as many elements as there are entries in the list..
+  #
+  optional_age: ListSizedStepped(HashRange(2), HashRange(18,100))
+  optional_profile: ListSized(HashRange(2), FixedValue(1))
   
 blocks:
 
@@ -243,6 +248,7 @@ blocks:
           },
           profile:
           {
+            __foreach: [profile_opt, "{optional_profile}"],
             __attrs: {
               income: "{{HashRange(1000000,10000000); ToDouble(); Div(100.0)}}"
             },

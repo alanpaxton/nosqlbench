@@ -19,6 +19,7 @@ package io.nosqlbench.adapter.xmlgen;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,14 +47,31 @@ public record XMLGenElement(Map<String, Object> children, Map<String, Object> at
         return result;
     }
 
-    static Map<String, Object> substitute(Map<String, Object> target, List<Pair<String, Object>> substitutions) {
+    private static List<Object> substitute(List<Object> target, List<Pair<String, Object>> substitutions) {
+        var result = new ArrayList<>(target.size());
+        for (var value : target) {
+            if (value instanceof Map<?,?> valueMap) {
+                result.add(substitute((Map<String, Object>) valueMap, substitutions));
+            } else if (value instanceof String valueString) {
+                result.add(substitute(valueString, substitutions));
+            } else if (value instanceof List<?> valueList) {
+                result.add(substitute((List<Object>) valueList, substitutions));
+            }
+        }
+
+        return result;
+    }
+
+    private static Map<String, Object> substitute(Map<String, Object> target, List<Pair<String, Object>> substitutions) {
         var result = new HashMap<String, Object>(target.size());
         for (var item : target.entrySet()) {
             var value = item.getValue();
             if (value instanceof Map<?,?> valueMap) {
                 result.put(item.getKey(), substitute((Map<String, Object>) valueMap, substitutions));
-            } else {
-                result.put(item.getKey(), substitute(item.getValue().toString(), substitutions));
+            } else if (value instanceof String valueString) {
+                result.put(item.getKey(), substitute(valueString, substitutions));
+            } else if (value instanceof List<?> valueList) {
+                result.put(item.getKey(), substitute((List<Object>) valueList, substitutions));
             }
         }
 
