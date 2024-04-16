@@ -56,6 +56,9 @@ public record XMLGenElement(Map<String, Object> children, Map<String, Object> at
                 result.add(substitute(valueString, substitutions));
             } else if (value instanceof List<?> valueList) {
                 result.add(substitute((List<Object>) valueList, substitutions));
+            } else {
+                //Any other kind of object, terminate substitution
+                result.add(value);
             }
         }
 
@@ -72,6 +75,9 @@ public record XMLGenElement(Map<String, Object> children, Map<String, Object> at
                 result.put(item.getKey(), substitute(valueString, substitutions));
             } else if (value instanceof List<?> valueList) {
                 result.put(item.getKey(), substitute((List<Object>) valueList, substitutions));
+            } else {
+                //Any other kind of object, terminate substitution
+                result.put(item.getKey(), value);
             }
         }
 
