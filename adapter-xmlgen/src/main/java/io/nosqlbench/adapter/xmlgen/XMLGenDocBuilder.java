@@ -144,13 +144,20 @@ public class XMLGenDocBuilder implements AutoCloseable {
             if (explicitForeach == null) {
                 createSiblings.add(xmlgenElement);
             } else {
-                if (explicitForeach instanceof  List<?> foreachList) {
-                    for (var foreachItem : foreachList) {
-                        createSiblings.add(xmlgenElement.substitute(List.of(Pair.of(foreachItem,"__1__"))));
+                if (explicitForeach instanceof  List<?> foreachSpecList && foreachSpecList.size() == 2) {
+                    var key = foreachSpecList.get(0);
+                    var foreachItemList = foreachSpecList.get(1);
+                    if (foreachItemList instanceof List<?> foreachItems) {
+                        for (var foreachItem : foreachItems) {
+                            createSiblings.add(xmlgenElement.substitute(List.of(Pair.of("[" + key + "]", foreachItem))));
+                        }
+                    } else {
+                        throw new RuntimeException("XML gen file element child of " + element + " as: " + contents +
+                            " " + Keyword.FOREACH.label + " __foreach values is not a list: " + foreachItemList);
                     }
                 } else {
                     throw new RuntimeException("XML gen file element child of " + element + " as: " + contents +
-                        " " + Keyword.FOREACH.label + " value is not a list");
+                        " " + Keyword.FOREACH.label + " must be a 2-element list key values");
                 }
             }
 

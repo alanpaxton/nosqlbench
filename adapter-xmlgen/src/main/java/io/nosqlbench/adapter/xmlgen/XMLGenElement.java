@@ -17,6 +17,9 @@ package io.nosqlbench.adapter.xmlgen;
  * under the License.
  */
 
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,8 +31,32 @@ import java.util.Map;
  * @param body
  */
 public record XMLGenElement(Map<String, Object> children, Map<String, Object> attrs, String body) {
-    public XMLGenElement substitute(final List<Object> substitutions) {
-        //TODO (AP) substitutions - currently a no-op
-        return this;
+    public XMLGenElement substitute(final List<Pair<String, Object>> substitutions) {
+        var body = substitute(this.body, substitutions);
+        var children = substitute(this.children, substitutions);
+        var attrs = substitute(this.attrs, substitutions);
+        return new XMLGenElement(children, attrs, body);
+    }
+
+    private static String substitute(final String target, List<Pair<String, Object>> substitutions) {
+        var result = target;
+        for (var sub : substitutions) {
+            result = result.replace(sub.getLeft(), sub.getRight().toString());
+        }
+        return result;
+    }
+
+    static Map<String, Object> substitute(Map<String, Object> target, List<Pair<String, Object>> substitutions) {
+        var result = new HashMap<String, Object>(target.size());
+        for (var item : target.entrySet()) {
+            var value = item.getValue();
+            if (value instanceof Map<?,?> valueMap) {
+                result.put(item.getKey(), substitute((Map<String, Object>) valueMap, substitutions));
+            } else {
+                result.put(item.getKey(), substitute(item.getValue().toString(), substitutions));
+            }
+        }
+        
+        return result;
     }
 }

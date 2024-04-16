@@ -28,7 +28,7 @@ scenarios:
 
   xmlgen:
     #genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
-    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,1000000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
+    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
     #gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(write-cycles,TEMPLATE(categoriescount,1000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
 
 bindings:
@@ -251,11 +251,11 @@ blocks:
             business: "{{WeightedStrings('Yes:1,No:2')}}"
           },
           watches: {
-            # TODO (AP) - a list of <watch>, each with an open_auction attribute
+            # a list of <watch>, each with an open_auction attribute
             watch: {
-              __foreach: "{auction_ref}",
+              __foreach: [auction_val, "{auction_ref}"],
               __attrs: {
-                open_auction: "open_auction__1__"
+                open_auction: "open_auction[auction_val]"
               }
             }
           }
