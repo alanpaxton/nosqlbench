@@ -28,7 +28,7 @@ scenarios:
 
   xmlgen:
     #genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
-    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
+    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
     #gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(write-cycles,TEMPLATE(categoriescount,1000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
 
 bindings:
@@ -75,10 +75,13 @@ bindings:
 
   # For person generation
   profile_education: Hash(); WeightedStrings('Other:3,High School:10,College:10,Graduate School:4')
-  # 1000 is the range of open auctions - can we reference another binding in this binding ?
-  auction_ref : ListSizedStepped(HashRange(0,10),HashRange(1,1000))
+  # 10000 is the range of open auctions - can we reference another binding in this binding ?
+  auction_ref : ListSizedStepped(HashRange(0,10),HashRange(1,10000))
+  # 1000 categories
+  category_ref : ListSizedStepped(HashRange(0,10),HashRange(1,1000))
   cc_num : ListSizedStepped(FixedValue(4),HashRange(1000,9999)); Join(' ')
   phone_num : ListSizedStepped(FixedValue(11),HashRange(0,9)); Join('')
+  optional_age: ListSizedStepped(HashRange(2),HashRange(18,100))
   
 blocks:
 
@@ -243,12 +246,14 @@ blocks:
             __attrs: {
               income: "{{HashRange(1000000,10000000); ToDouble(); Div(100.0)}}"
             },
-            # TODO (AP) - a list of <interest>, each with a category attribute
+            # a list of <interest>, each with a category attribute
             interest: {
-              __attrs: { category: "category{{Identity()}}" }
+              __foreach: [cat_val, "{category_ref}"],
+              __attrs: { category: "category[cat_val]" }
             },
             education: "{profile_education}",
-            business: "{{WeightedStrings('Yes:1,No:2')}}"
+            business: "{{WeightedStrings('Yes:1,No:2')}}",
+            age: "{optional_age}"
           },
           watches: {
             # a list of <watch>, each with an open_auction attribute

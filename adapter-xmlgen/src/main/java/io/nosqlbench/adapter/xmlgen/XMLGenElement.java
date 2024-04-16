@@ -56,7 +56,7 @@ public record XMLGenElement(Map<String, Object> children, Map<String, Object> at
                 result.put(item.getKey(), substitute(item.getValue().toString(), substitutions));
             }
         }
-        
+
         return result;
     }
 }
