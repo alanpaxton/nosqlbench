@@ -18,7 +18,7 @@ bindings:
   lat: Uniform(-180d, 180d)
   lng: Hash() -> long; Uniform(-180d, 180d)
   friend_id: Add(-1); ToHashedUUID(); ToString() -> String
-  email: ListStepped(LastNames(), AlphaNumericString(16), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
+  email: ListStepped(LastNames(), AlphaNumericString(4), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
   homepage: ListStepped(FixedValue("https://www."), WeightedStrings('geocities:1,yahoo:2'), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
   street: ListStepped(ToString(Uniform(1,10000)), Counties(), WeightedStrings('Street:3,Road:2')); Join(' ')
 
@@ -37,9 +37,13 @@ bindings:
   item_quantity: Add(63); Hash(); Exponential(10); ModuloToLong(10); Add(1)
   item_name: Add(127); ListSizedHashed(Zipf(100,1.2), CitiesByPopulation(), StateNamesByPopulation()); Join(' ')
   payment_options: Add(255); SetSizedHashed(HashRange(1,4),WeightedStrings('Cash:20;Personal check:8;Creditcard:4;Money order:2')); Join(', ')
+  item_description_list: Add(383); ListSizedHashed(Zipf(100,1.75), MobyDick())
+  item_category_list: Add(767); ListSizedHashed(Zipf(100,1.75), HashRange(1,<<categoriescount:1000>>))
   email_date: Add(511); Hash(); Uniform(0,30000000); ToDate(86400000,1440); ToString()
   shipping_options: Add(1023); Hash(); WeightedStrings('Will ship only within country:2;Will ship only within country, Buyer pays fixed shipping charges, See description for charges:1;Will ship internationally:1')
-
+  email_from_names: Add(1279); ListSizedStepped(HashInterval(0,5),ListStepped(LastNames(), AlphaNumericString(4), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')))
+  email_to_names: Add(1279); ListSizedHashed(HashInterval(0,5), ListStepped(LastNames(), AlphaNumericString(4), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')))
+  
   # For category generation
   #
   category_name: Add(63); ListSizedHashed(Zipf(100,1.4), CountryNames()); Join(' ')
@@ -147,13 +151,20 @@ blocks:
             quantity: "{item_quantity}",
             name: "{item_name}",
             payment: "{payment_options}",
-            shipping: "{shipping_options}",
             description: {
-              text: "{{MobyDick()}}"
+              parlist: {
+                listitem: {
+                  __foreach: [description_val, "{item_description_list}"],
+                  text: "[description_val]"
+                }
+              }
             },
-            expandedlist: "{{ListSizedHashed(FixedValue(5),CitiesByPopulation())}}",
-            list: {
-              listitem: "{{}}"
+            shipping: "{shipping_options}",
+            incategory: {
+              __foreach: [cat_val, "{item_category_list}"],
+              __attrs: {
+                category: "category[cat_val]"
+              }
             }
           }
         ratio: 1
