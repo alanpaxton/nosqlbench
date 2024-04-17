@@ -1,9 +1,9 @@
 
 description: |
-  This workload does 2 different things for eXist-db (or ultimately, any xmldb)
-    - It generates XML documents in bulk for loading into a DB.
-    - It generates CRUD operations for direct access to the database.
+  This workload generates CRUD operations for direct access to an xmldb: database (eXist-db in the first instance).
   It was derived ultimately from the existing CRUD Basic workflow examples in nb5.
+  The write phase simulates the generation of entries in a linguistic corpus.
+  It is only partly converted; create and write are implemented. Read, update and delete are not converted.
 
 scenarios:
   default:
@@ -26,11 +26,6 @@ scenarios:
   existdb:
     write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
-  xmlgen:
-    #genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
-    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,100000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
-    #gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(write-cycles,TEMPLATE(categoriescount,1000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
-
 bindings:
 
   collection: FixedValue(<<collection:"db">>) -> String
@@ -43,56 +38,16 @@ bindings:
   user_id: ToHashedUUID(); ToString() -> String
   created_on: Uniform(1262304000,1577836800) -> long
   gender: WeightedStrings('M:10;F:10;O:1')
+
+  # The native FullNames() method doesn't give us the same last name as LastNames()
   full_name: ListSized(FixedValue(2), FirstNames(), LastNames()); Join(' ')
-  last_name: LastNames()
   married: ModuloToBoolean()
   city: Cities()
   country_code: CountryCodes()
   lat: Uniform(-180d, 180d)
   lng: Hash() -> long; Uniform(-180d, 180d)
   friend_id: Add(-1); ToHashedUUID(); ToString() -> String
-  email: ListStepped(LastNames(), AlphaNumericString(16), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
-  homepage: ListStepped(FixedValue("https://www."), WeightedStrings('geocities:1,yahoo:2'), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
-  street: ListStepped(ToString(Uniform(1,10000)), Counties(), WeightedStrings('Street:3,Road:2')); Join(' ')
           
-
-  # distribute generated XML over 1000 files, weighted heavily to the first few
-  # via use of the exponential. With a rate parameter of 0.01, (mean == 1/rate == 100)
-  # PD (probability density) for x=10 tells us 9.5% of data lands in the first 10 files
-  # PD x=1 -> 0.01, x=10 -> 0.095, x=100 -> 0.632, x=1000 -> 0.9999
-  xml_file_id: Exponential(100); ModuloToLong(1000)
-  # file id of the previous generated element
-  prev_file_id: Add(-1); Exponential(100); ModuloToLong(1000)
-
-  # For item generation
-  item_quantity: Hash(); Exponential(10); ModuloToLong(10); Add(1)
-  item_name: ListSizedHashed(Zipf(100,1.2), CitiesByPopulation(), StateNamesByPopulation()); Join(' ')
-  payment_options: SetSizedHashed(HashRange(1,4),WeightedStrings('Cash:20;Personal check:8;Creditcard:4;Money order:2')); Join(', ')
-  email_date: Hash(); Uniform(0,30000000); ToDate(86400000,1440); ToString()
-  shipping_options: Hash(); WeightedStrings('Will ship only within country:2;Will ship only within country, Buyer pays fixed shipping charges, See description for charges:1;Will ship internationally:1')
-
-  category_name: ListSizedHashed(Zipf(100,1.4), CountryNames()); Join(' ')
-
-  # For person generation
-  # 
-  # All the Add(X); Rest.. definitions ensure that the hashes used for each individual binding,
-  # start at a different offset in the hash cycle, so that there is no (obvious, direct) relationship
-  # between any of them.
-  #
-  profile_education: Add(63); Hash(); WeightedStrings('Other:3,High School:10,College:10,Graduate School:4')
-  # 10000 is the range of open auctions - can we reference another binding in this binding ?
-  auction_ref : Add(127); ListSizedStepped(HashRange(0,10),HashRange(1,10000))
-  # 1000 categories
-  category_ref : Add(255); ListSizedStepped(HashRange(0,10),HashRange(1,1000))
-  cc_num : Add(511); ListSizedStepped(FixedValue(4),HashRange(1000,9999)); Join(' ')
-  phone_num : Add(1023); ListSizedStepped(FixedValue(11),HashRange(0,9)); Join('')
-
-  # generate an optional value by generating a list of 0 or 1 size,
-  # then use that to generate as many elements as there are entries in the list..
-  #
-  optional_age: Add(2047); ListSizedStepped(HashRange(2), HashRange(18,100))
-  optional_profile: Add(4095); ListSized(HashRange(2), FixedValue(1))
-  
 blocks:
 
   schema:
@@ -188,138 +143,6 @@ blocks:
 
           return
             xmldb:store("/db/testnb/beta", "{random_key}", $record)
-
-  genflatexamples:
-    ops:
-      generate-flat-xml:
-        command: element
-        cycle: "{{Identity()}}"
-        file: "{xml_file_id}"
-        # currently only generating elements at top level
-        element: "w"
-        __attrs:
-          { uid: "{user_id}",
-            count: "{{Identity()}}",
-            pos: "{{WeightedStrings('c:20;z:8;n:4;p:2;d;Dx:3')}}",
-            first: "{{FirstNames()}}",
-            last: "{{LastNames()}}",
-            full: "{{FullNames()}}",
-            city: "{{CitiesByPopulation()}}",
-            map: "{{MapSizedStepped(Zipf(100,2), Identity(), NumberNameToString())}}",
-            s: "{{NumberNameToString()}}",
-          }
-        __body: "{{MobyDick()}}"
-        count: "{{Identity()}}"
-        ratio: 4
-
-  genauctioncategories:
-    ops:
-      generate-category:
-        file: "{xml_file_id}"
-        path: ["categories", "category"]
-        __attrs: {
-          id: "category{{Identity()}}"
-        }
-        __children: {
-          name: "{category_name}",
-          description: {
-              text: "{{MobyDick()}}"
-            }
-        }
-        op: >2
-          "generate category op - required by the system - we don't use it"
-
-  genauctionpeople:
-    ops:
-      generate-person:
-        cycle: "{{Identity()}}"
-        file: "{xml_file_id}"
-        path: ["people", "person"]
-        __attrs:
-          { id: "person{{Identity()}}",
-            city: "{{CitiesByPopulation()}}"
-          }
-        __children: {
-          name: "{full_name}",
-          emailaddress: "{email}",
-          phone: "{phone_num}",
-          homepage: "{homepage}/{last_name}",
-          creditcard: "{cc_num}",
-          address: {
-            street: "{street}",
-            city: "{{CitiesByPopulation()}}",
-            county: "{{CountiesByPopulation()}}",
-            zipcode: "{{ZipCodesByPopulation()}}"
-          },
-          profile:
-          {
-            __foreach: [profile_opt, "{optional_profile}"],
-            __attrs: {
-              income: "{{HashRange(1000000,10000000); ToDouble(); Div(100.0)}}"
-            },
-            # a list of <interest>, each with a category attribute
-            interest: {
-              __foreach: [cat_val, "{category_ref}"],
-              __attrs: { category: "category[cat_val]" }
-            },
-            education: "{profile_education}",
-            business: "{{WeightedStrings('Yes:1,No:2')}}",
-            age: "{optional_age}"
-          },
-          watches: {
-            # a list of <watch>, each with an open_auction attribute
-            watch: {
-              __foreach: [auction_val, "{auction_ref}"],
-              __attrs: {
-                open_auction: "open_auction[auction_val]"
-              }
-            }
-          }
-        }
-        op: >2
-          "generate person op - required by the system - we don't use it"
-
-  genauctionitems:
-    ops:
-      generate-item:
-        cycle: "{{Identity()}}"
-        file: "{xml_file_id}"
-        path: ["regions", "africa", "item"]
-        __attrs:
-          { id: "item{{Identity()}}",
-          }
-        __children:
-          { location: "{{CountryNames()}}",
-            quantity: "{item_quantity}",
-            name: "{item_name}",
-            payment: "{payment_options}",
-            shipping: "{shipping_options}",
-            description: {
-              text: "{{MobyDick()}}"
-            },
-            expandedlist: "{{ListSizedHashed(FixedValue(5),CitiesByPopulation())}}",
-            list: {
-              listitem: "{{}}"
-            }
-          }
-        ratio: 1
-        op: >2
-          "generate item op - required by the system - we don't use it"
-
-      generate-mail:
-        cycle: "{{Identity()}}"
-        file: "{xml_file_id}"
-        path: ["regions", "africa", "item", "mailbox", "mail"]
-        __children:
-          {
-            from: "{{FullNames()}}",
-            to: "{{Add(-1); FullNames()}}",
-            date: "{email_date}",
-            text: "{{WarAndPeace()}}"
-          }
-        ratio: 4
-        op: >2
-          "generate mail op - required by the system - we don't use it"
 
   read:
     ops:
