@@ -74,19 +74,24 @@ bindings:
   category_name: ListSizedHashed(Zipf(100,1.4), CountryNames()); Join(' ')
 
   # For person generation
-  profile_education: Hash(); WeightedStrings('Other:3,High School:10,College:10,Graduate School:4')
+  # 
+  # All the Add(X); Rest.. definitions ensure that the hashes used for each individual binding,
+  # start at a different offset in the hash cycle, so that there is no (obvious, direct) relationship
+  # between any of them.
+  #
+  profile_education: Add(63); Hash(); WeightedStrings('Other:3,High School:10,College:10,Graduate School:4')
   # 10000 is the range of open auctions - can we reference another binding in this binding ?
-  auction_ref : ListSizedStepped(HashRange(0,10),HashRange(1,10000))
+  auction_ref : Add(127); ListSizedStepped(HashRange(0,10),HashRange(1,10000))
   # 1000 categories
-  category_ref : ListSizedStepped(HashRange(0,10),HashRange(1,1000))
-  cc_num : ListSizedStepped(FixedValue(4),HashRange(1000,9999)); Join(' ')
-  phone_num : ListSizedStepped(FixedValue(11),HashRange(0,9)); Join('')
+  category_ref : Add(255); ListSizedStepped(HashRange(0,10),HashRange(1,1000))
+  cc_num : Add(511); ListSizedStepped(FixedValue(4),HashRange(1000,9999)); Join(' ')
+  phone_num : Add(1023); ListSizedStepped(FixedValue(11),HashRange(0,9)); Join('')
 
   # generate an optional value by generating a list of 0 or 1 size,
   # then use that to generate as many elements as there are entries in the list..
   #
-  optional_age: ListSizedStepped(HashRange(2), HashRange(18,100))
-  optional_profile: ListSized(HashRange(2), FixedValue(1))
+  optional_age: Add(2047); ListSizedStepped(HashRange(2), HashRange(18,100))
+  optional_profile: Add(4095); ListSized(HashRange(2), FixedValue(1))
   
 blocks:
 
