@@ -52,7 +52,7 @@ bindings:
   #
   email_from_names: Add(70); ListSizedStepped(HashInterval(0,5), Flow(Add(80) -> long, ListFunctions(FirstNames(),FixedValue(" "),LastNames(),FixedValue(" mailto:"), LastNames(), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')),Join("")))
   email_to_names: Add(70); ListSizedHashed(HashInterval(0,5), Flow(ListFunctions(FirstNames(),FixedValue(" "),LastNames(),FixedValue(" mailto:"), LastNames(), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')),Join("")))
-  email_dates: Add(70); ListSizedHashed(HashInterval(0,5), Flow(Uniform(0,30000000), ToDate(86400000,1440)))
+  email_dates: Add(70); ListSizedHashed(HashInterval(0,5), Flow(Uniform(0,19837),LongToLocalDateDays(),DateTimeFormatter("MM/dd/uuuu")))
   email_text: Add(70); ListSizedHashed(HashInterval(0,5), WarAndPeace())
 
   # For category generation
