@@ -18,7 +18,10 @@ bindings:
   lat: Uniform(-180d, 180d)
   lng: Hash() -> long; Uniform(-180d, 180d)
   friend_id: Add(-1); ToHashedUUID(); ToString() -> String
-  email: ListStepped(LastNames(), AlphaNumericString(4), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
+
+  # For people / person generation
+  #
+  email: ListFunctions(LastNames(), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
   homepage: ListStepped(FixedValue("https://www."), WeightedStrings('geocities:1,yahoo:2'), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')); Join('')
   street: ListStepped(ToString(Uniform(1,10000)), Counties(), WeightedStrings('Street:3,Road:2')); Join(' ')
 
@@ -33,20 +36,28 @@ bindings:
   prev_file_id: Add(-1); Exponential(100); ModuloToLong(1000)
 
   # For item generation
+  # The prefixed Add(X) on each ensures that the PRNG starts at a different position for each binding,
+  # so we do not see any strange coupling between bindings, (most glaringly) the sizes of different lists
   #
-  item_quantity: Add(63); Hash(); Exponential(10); ModuloToLong(10); Add(1)
-  item_name: Add(127); ListSizedHashed(Zipf(100,1.2), CitiesByPopulation(), StateNamesByPopulation()); Join(' ')
-  payment_options: Add(255); SetSizedHashed(HashRange(1,4),WeightedStrings('Cash:20;Personal check:8;Creditcard:4;Money order:2')); Join(', ')
-  item_description_list: Add(383); ListSizedHashed(Zipf(100,1.75), MobyDick())
-  item_category_list: Add(767); ListSizedHashed(Zipf(100,1.75), HashRange(1,<<categoriescount:1000>>))
-  email_date: Add(511); Hash(); Uniform(0,30000000); ToDate(86400000,1440); ToString()
-  shipping_options: Add(1023); Hash(); WeightedStrings('Will ship only within country:2;Will ship only within country, Buyer pays fixed shipping charges, See description for charges:1;Will ship internationally:1')
-  email_from_names: Add(1279); ListSizedStepped(HashInterval(0,5),ListStepped(LastNames(), AlphaNumericString(4), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')))
-  email_to_names: Add(1279); ListSizedHashed(HashInterval(0,5), ListStepped(LastNames(), AlphaNumericString(4), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1')))
+  item_quantity: Add(10); Hash(); Exponential(10); ModuloToLong(10); Add(1)
+  item_name: Add(20); ListSizedHashed(Zipf(100,1.2), CitiesByPopulation(), StateNamesByPopulation()); Join(' ')
+  payment_options: Add(30); SetSizedHashed(HashRange(1,4),WeightedStrings('Cash:20;Personal check:8;Creditcard:4;Money order:2')); Join(', ')
+  item_description_list: Add(40); ListSizedHashed(Zipf(100,1.75), MobyDick())
+  item_category_list: Add(50); ListSizedHashed(Zipf(100,1.75), HashRange(1,<<categoriescount:1000>>))
+  shipping_options: Add(60); Hash(); WeightedStrings('Will ship only within country:2;Will ship only within country, Buyer pays fixed shipping charges, See description for charges:1;Will ship internationally:1')
   
+  # For generation of a variable number of <mailbox><mail> elements inside an item
+  # Each of the following generates the same-sized list on the same cycle, uisng HashInterval(0,5)
+  # Each of the generated lists is used in a single __foreach to generate the fields of the individual mail records
+  #
+  email_from_names: Add(70); ListSizedStepped(HashInterval(0,5), Flow(Add(80) -> long, ListFunctions(FirstNames(),FixedValue(" "),LastNames(),FixedValue(" <"), LastNames(), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1'), FixedValue(">")),Join("")))
+  email_to_names: Add(70); ListSizedHashed(HashInterval(0,5), Flow(ListFunctions(FirstNames(),FixedValue(" "),LastNames(),FixedValue(" <"), LastNames(), FixedValue("@"), AlphaNumericString(4), FixedValue("."), WeightedStrings('com:10;org:8;co.uk:1'), FixedValue(">")),Join("")))
+  email_dates: Add(70); ListSizedHashed(HashInterval(0,5), Flow(Uniform(0,30000000), ToDate(86400000,1440)))
+  email_text: Add(70); ListSizedHashed(HashInterval(0,5), WarAndPeace())
+
   # For category generation
   #
-  category_name: Add(63); ListSizedHashed(Zipf(100,1.4), CountryNames()); Join(' ')
+  category_name: Add(100); ListSizedHashed(Zipf(100,1.4), CountryNames()); Join(' ')
 
   # For person generation
   # 
@@ -54,13 +65,13 @@ bindings:
   # start at a different offset in the hash cycle, so that there is no (obvious, direct) relationship
   # between any of them.
   #
-  profile_education: Add(63); Hash(); WeightedStrings('Other:3,High School:10,College:10,Graduate School:4')
+  profile_education: Add(110); Hash(); WeightedStrings('Other:3,High School:10,College:10,Graduate School:4')
   # 10000 is the range of open auctions - can we reference another binding in this binding ?
-  auction_ref : Add(127); ListSizedStepped(HashRange(0,10),HashRange(1,10000))
+  auction_ref : Add(120); ListSizedStepped(HashRange(0,10),HashRange(1,10000))
   # 1000 categories
-  category_ref : Add(255); ListSizedStepped(HashRange(0,10),HashRange(1,1000))
-  cc_num : Add(511); ListSizedStepped(FixedValue(4),HashRange(1000,9999)); Join(' ')
-  phone_num : Add(1023); ListSizedStepped(FixedValue(11),HashRange(0,9)); Join('')
+  category_ref : Add(130); ListSizedStepped(HashRange(0,10),HashRange(1,1000))
+  cc_num : Add(140); ListSizedStepped(FixedValue(4),HashRange(1000,9999)); Join(' ')
+  phone_num : Add(150); ListSizedStepped(FixedValue(11),HashRange(0,9)); Join('')
 
   # generate an optional value by generating a list of 0 or 1 size,
   # then use that to generate as many elements as there are entries in the list..
@@ -117,7 +128,7 @@ blocks:
             },
             # a list of <interest>, each with a category attribute
             interest: {
-              __foreach: [cat_val, "{category_ref}"],
+              __foreach: {cat_val: "{category_ref}"},
               __attrs: { category: "category[cat_val]" }
             },
             education: "{profile_education}",
@@ -154,7 +165,7 @@ blocks:
             description: {
               parlist: {
                 listitem: {
-                  __foreach: [description_val, "{item_description_list}"],
+                  __foreach: {description_val: "{item_description_list}"},
                   text: "[description_val]"
                 }
               }
@@ -165,26 +176,25 @@ blocks:
               __attrs: {
                 category: "category[cat_val]"
               }
+            },
+            mailbox: {
+              mail: {
+                __foreach: {
+                  from: "{email_from_names}",
+                  to: "{email_to_names}",
+                  date: "{email_dates}",
+                  text: "{email_text}"
+                },              
+                from: "[from]",
+                to: "[to]",
+                date: "[date]",
+                text: "[text]"
+              }
             }
           }
         ratio: 1
         op: >2
           "generate item op - required by the system - we don't use it"
-
-      generate-mail:
-        cycle: "{{Identity()}}"
-        file: "{xml_file_id}"
-        path: ["regions", "africa", "item", "mailbox", "mail"]
-        __children:
-          {
-            from: "{{FullNames()}}",
-            to: "{{Add(-1); FullNames()}}",
-            date: "{email_date}",
-            text: "{{WarAndPeace()}}"
-          }
-        ratio: 4
-        op: >2
-          "generate mail op - required by the system - we don't use it"
 
 
 

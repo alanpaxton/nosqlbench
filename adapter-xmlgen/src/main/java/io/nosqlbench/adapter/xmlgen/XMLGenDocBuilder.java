@@ -23,6 +23,7 @@ import net.sf.saxon.s9api.push.Document;
 import net.sf.saxon.s9api.push.Element;
 import org.apache.commons.lang3.tuple.Pair;
 import org.checkerframework.checker.units.qual.A;
+import ujson.Arr;
 
 import java.security.Key;
 import java.util.ArrayList;
@@ -155,9 +156,33 @@ public class XMLGenDocBuilder implements AutoCloseable {
                         throw new RuntimeException("XML gen file element child of " + element + " as: " + contents +
                             " " + Keyword.FOREACH.label + " __foreach values is not a list: " + foreachItemList);
                     }
+                } else if (explicitForeach instanceof Map<?,?> foreachSpecMap) {
+                    var substitutionLists = new ArrayList<List<Pair<String, Object>>>();
+                    for (var substitution : foreachSpecMap.entrySet()) {
+                        var substitutionKey = substitution.getKey();
+                        List<?> substitutionValues;
+                        if (substitution.getValue() instanceof List<?> substitutionValuesList) {
+                            substitutionValues = substitutionValuesList;
+                        } else {
+                            substitutionValues = List.of(substitution.getValue());
+                        }
+
+                        // create any extra substitution lists we might use
+                        for (int i = substitutionLists.size(); i < substitutionValues.size(); i++) {
+                            substitutionLists.add(new ArrayList<>());
+                        }
+                        // add the i-th substitution of the key to the i-th substitution list
+                        for (int i = 0; i < substitutionValues.size(); i++) {
+                            var substitutionValue = substitutionValues.get(i);
+                            substitutionLists.get(i).add(Pair.of("[" + substitutionKey + "]", substitutionValue));
+                        }
+                    }
+                    for (var substitutionList : substitutionLists) {
+                        createSiblings.add(xmlgenElement.substitute(substitutionList));
+                    }
                 } else {
                     throw new RuntimeException("XML gen file element child of " + element + " as: " + contents +
-                        " " + Keyword.FOREACH.label + " must be a 2-element list key values");
+                        " " + Keyword.FOREACH.label + " must be a 2-element list [key, values] or a map");
                 }
             }
 
