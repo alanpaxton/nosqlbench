@@ -76,8 +76,15 @@ bindings:
   # generate an optional value by generating a list of 0 or 1 size,
   # then use that to generate as many elements as there are entries in the list..
   #
-  optional_age: Add(2047); ListSizedStepped(HashRange(2), HashRange(18,100))
-  optional_profile: Add(4095); ListSized(HashRange(2), FixedValue(1))
+  optional_age: Add(200); ListSizedStepped(HashRange(2), HashRange(18,100))
+  optional_profile: Add(210); ListSized(HashRange(2), FixedValue(1))
+
+  # generate a list with a 90% probability of 0 elements, and a 10% probability of 1 element
+  # When any list is used as an attribute value, xmlgen will generate the attribute only if the list is non-empty.
+  # A potential enhancement would be to implement a built-in Optional(probablity,value) function that generates
+  # the list in 1 go.
+  #
+  optional_featured: Add(220); ListSized(LongFlow(HashRange(10,110), Div(100) -> long), FixedValue("yes"))
   
 blocks:
 
@@ -156,6 +163,7 @@ blocks:
         path: ["regions", "africa", "item"]
         __attrs:
           { id: "item{{Identity()}}",
+            featured: "{optional_featured}"
           }
         __children:
           { location: "{{CountryNames()}}",

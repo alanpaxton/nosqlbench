@@ -71,13 +71,30 @@ public class XMLGenDocBuilder implements AutoCloseable {
         }
     }
 
+    private void setAttrOfElement(final Element element, final String attrName, final String value) {
+        try {
+            element.attribute(attrName, value);
+        } catch (SaxonApiException e) {
+            throw new RuntimeException("XML gen file attribute " + attrName, e);
+        }
+    }
+
     private void setContentsOfElement(final Element element, final XMLGenElement elementContents) {
 
         for (var attr : elementContents.attrs().entrySet()) {
-            try {
-                element.attribute(attr.getKey(), attr.getValue().toString());
-            } catch (SaxonApiException e) {
-                throw new RuntimeException("XML gen file attribute " + attr.getKey(), e);
+            var value = attr.getValue();
+            if (value instanceof List<?> values) {
+                switch (values.size()) {
+                    case 0:
+                        break;
+                    case 1:
+                        setAttrOfElement(element, attr.getKey(), values.getFirst().toString());
+                        break;
+                    default:
+                        setAttrOfElement(element, attr.getKey(), values.toString());
+                }
+            } else {
+                setAttrOfElement(element, attr.getKey(), attr.getValue().toString());
             }
         }
 
