@@ -7,6 +7,7 @@ scenarios:
     genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
     genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
     gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(write-cycles,TEMPLATE(categoriescount,1000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
+    genopenauctions:    run driver=xmlgen tags==block:"genauctionopen.*", cycles===TEMPLATE(write-cycles,TEMPLATE(openauctionscount,7500)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-openauctions xmlroot=site
 
 bindings:
   # The native FullNames() method doesn't give us the same last name as LastNames()
@@ -85,6 +86,11 @@ bindings:
   # the list in 1 go.
   #
   optional_featured: Add(220); ListSized(LongFlow(HashRange(10,110), Div(100) -> long), FixedValue("yes"))
+
+  # open auctions
+  #
+  openauction_author: Add(300); HashRange(1,personcount)
+  openauction_bidder: Add(310); HashRange(1,personcount)
   
 blocks:
 
@@ -204,5 +210,34 @@ blocks:
         op: >2
           "generate item op - required by the system - we don't use it"
 
-
+  genauctionopenauction:
+    ops:
+      generate-openauction:
+        op: >2
+          "generate open auction op - required by the system - we don't use it"
+        cycle: "{{Identity()}}"
+        file: "{xml_file_id}"
+        path: ["open_auctions", "open_auction"]
+        __attrs: { id: "open_auction{{Identity()}}"
+        }
+        __children: {
+          annotation: {
+            author: {
+              __attrs: { person: "person{openauction_author}" }
+            },
+            description: {
+              text: "{{MobyDick()}}"
+            },
+            happiness: "{{HashRange(1,10)}}"
+          },
+          bidder: {
+            personref: {
+              __attrs: { person: "person{openauction_bidder}" }
+            }
+          },
+          initial: {
+          },
+          itemref: {
+          }
+        }
 
