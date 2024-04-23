@@ -78,6 +78,8 @@ public class ServiceSelector<T> implements Predicate<ServiceLoader.Provider<? ex
     public List<? extends ServiceLoader.Provider<? extends T>> getAllProviders() {
         return loader
             .stream()
+            .filter(l -> l.type().getAnnotation(Service.class) != null)
+            .filter(l -> l.type().getAnnotation(Service.class).selector().equals(name))
             .peek(l -> {
                     if (l.type().getAnnotation(Service.class) == null) {
                         throw new RuntimeException(
@@ -88,8 +90,6 @@ public class ServiceSelector<T> implements Predicate<ServiceLoader.Provider<? ex
                     }
                 }
             )
-            .filter(l -> l.type().getAnnotation(Service.class) != null)
-            .filter(l -> l.type().getAnnotation(Service.class).selector().equals(name))
             .toList();
     }
 
