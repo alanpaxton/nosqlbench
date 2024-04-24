@@ -4,10 +4,11 @@ description: |
 
 scenarios:
   xmlgen:
-    genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
-    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
-    gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(write-cycles,TEMPLATE(categoriescount,1000)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
-    genopenauctions:    run driver=xmlgen tags==block:"genauctionopen.*", cycles===TEMPLATE(write-cycles,TEMPLATE(openauctionscount,7500)) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-openauctions xmlroot=site
+    #genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(itemcount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
+    #genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(personcount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
+    #gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(categorycount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
+    genopenauctions:    run driver=xmlgen tags==block:"genauctionopen.*", cycles===TEMPLATE(openauctionscount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-openauctions xmlroot=site
+    #genclosedauctions:    run driver=xmlgen tags==block:"genauctionclosed.*", cycles===TEMPLATE(closedauctionscount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-openauctions xmlroot=site
 
 bindings:
   # The native FullNames() method doesn't give us the same last name as LastNames()
@@ -44,7 +45,7 @@ bindings:
   item_name: Add(20); ListSizedHashed(Zipf(100,1.2), CitiesByPopulation(), StateNamesByPopulation()); Join(' ')
   payment_options: Add(30); SetSizedHashed(HashRange(1,4),WeightedStrings('Cash:20;Personal check:8;Creditcard:4;Money order:2')); Join(', ')
   item_description_list: Add(40); ListSizedHashed(Zipf(100,1.75), MobyDick())
-  item_category_list: Add(50); ListSizedHashed(Zipf(100,1.75), HashRange(1,<<categoriescount:1000>>))
+  item_category_list: Add(50); ListSizedHashed(Zipf(100,1.75), HashRange(1,TEMPLATE(categorycount)))
   shipping_options: Add(60); Hash(); WeightedStrings('Will ship only within country:2;Will ship only within country, Buyer pays fixed shipping charges, See description for charges:1;Will ship internationally:1')
   
   # For generation of a variable number of <mailbox><mail> elements inside an item
@@ -89,8 +90,8 @@ bindings:
 
   # open auctions
   #
-  openauction_author: Add(300); HashRange(1,personcount)
-  openauction_bidder: Add(310); HashRange(1,personcount)
+  openauction_author: Add(300); HashRange(1,TEMPLATE(personcount))
+  openauction_bidder: Add(310); HashRange(1,TEMPLATE(personcount))
   
 blocks:
 
