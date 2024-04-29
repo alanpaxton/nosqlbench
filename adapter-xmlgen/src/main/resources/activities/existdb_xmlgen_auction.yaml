@@ -8,7 +8,7 @@ scenarios:
     #genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(personcount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
     #gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(categorycount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
     genopenauctions:    run driver=xmlgen tags==block:"genauctionopen.*", cycles===TEMPLATE(openauctionscount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-openauctions xmlroot=site
-    #genclosedauctions:    run driver=xmlgen tags==block:"genauctionclosed.*", cycles===TEMPLATE(closedauctionscount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-openauctions xmlroot=site
+    #genclosedauctions:    run driver=xmlgen tags==block:"genauctionclosed.*", cycles===TEMPLATE(closedauctionscount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-closedauctions xmlroot=site
 
 bindings:
   # The native FullNames() method doesn't give us the same last name as LastNames()
@@ -90,8 +90,15 @@ bindings:
 
   # open auctions
   #
-  openauction_author: Add(300); HashRange(1,TEMPLATE(personcount))
-  openauction_bidder: Add(310); HashRange(1,TEMPLATE(personcount))
+  # Use the MVEL features http://mvel.documentnode.com/#simple-property-expression to relate values
+  # _current value is the _initial value, plus the sum of the _bid_values
+  #
+  oauction_initial: Zipf(10000,1.0); SaveLong('oauction_initial'); SaveLong('oauction_bid')
+  oauction_reserve: HashRange(50,1500); SaveLong('oauction_reserve'); Expr('oauction_initial + oauction_reserve')
+  oauction_bid_values: ListSizedStepped(HashInterval(0,5), LongFlow(HashRange(50,500) -> long, SaveLong('oauction_increase'), Expr('oauction_increase + oauction_bid') -> long, SaveLong('oauction_bid'), Expr('oauction_increase') -> long)))
+  ouaction_current: Expr('oauction_bid')
+  oauction_bidder: ListSizedStepped(HashInterval(0,5), LongFlow(HashRange(1,TEMPLATE(personcount))))
+  oauction_author: Add(300); HashRange(1,TEMPLATE(personcount))
   
 blocks:
 
@@ -224,21 +231,31 @@ blocks:
         __children: {
           annotation: {
             author: {
-              __attrs: { person: "person{openauction_author}" }
+              __attrs: { person: "person{oauction_author}" }
             },
             description: {
               text: "{{MobyDick()}}"
             },
             happiness: "{{HashRange(1,10)}}"
           },
+          initial: "{oauction_initial}",
+          reserve: "{oauction_reserve}",
+          itemref: {
+          },
           bidder: {
+            __foreach: {
+              increase: "{oauction_bid_values}",
+              person: "{oauction_bidder}"
+            },
+            increase: "[increase]",
             personref: {
-              __attrs: { person: "person{openauction_bidder}" }
+              __attrs: {
+                person: "person[person]"
+              }
             }
           },
-          initial: {
-          },
-          itemref: {
-          }
+          current: "{ouaction_current}",
+          type: "{{WeightedStrings('Regular:1;Featured:1')}}"
         }
+
 
