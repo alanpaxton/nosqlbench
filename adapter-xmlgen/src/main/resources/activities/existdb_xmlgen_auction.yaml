@@ -5,9 +5,9 @@ description: |
 scenarios:
   xmlgen:
     #genitems:    run driver=xmlgen tags==block:"genauctionitems.*", cycles===TEMPLATE(itemcount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-items xmlroot=site
-    #genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(personcount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
+    genpeople:    run driver=xmlgen tags==block:"genauctionpeople.*", cycles===TEMPLATE(personcount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-people xmlroot=site
     #gencategories:    run driver=xmlgen tags==block:"genauctioncategories.*", cycles===TEMPLATE(categorycount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-categories xmlroot=site
-    genopenauctions:    run driver=xmlgen tags==block:"genauctionopen.*", cycles===TEMPLATE(openauctionscount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-openauctions xmlroot=site
+    #genopenauctions:    run driver=xmlgen tags==block:"genauctionopen.*", cycles===TEMPLATE(openauctionscount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-openauctions xmlroot=site
     #genclosedauctions:    run driver=xmlgen tags==block:"genauctionclosed.*", cycles===TEMPLATE(closedauctionscount) seq=interval threads=auto errors=timer,warn directorypath=./target/xml-generated-closedauctions xmlroot=site
 
 bindings:
@@ -93,12 +93,12 @@ bindings:
   # Use the MVEL features http://mvel.documentnode.com/#simple-property-expression to relate values
   # _current value is the _initial value, plus the sum of the _bid_values
   #
-  oauction_initial: Zipf(10000,1.0); SaveLong('oauction_initial'); SaveLong('oauction_bid')
+  oauction_initial: Add(300); HashRange(500,3000); SaveLong('oauction_initial'); SaveLong('oauction_bid')
   oauction_reserve: HashRange(50,1500); SaveLong('oauction_reserve'); Expr('oauction_initial + oauction_reserve')
   oauction_bid_values: ListSizedStepped(HashInterval(0,5), LongFlow(HashRange(50,500) -> long, SaveLong('oauction_increase'), Expr('oauction_increase + oauction_bid') -> long, SaveLong('oauction_bid'), Expr('oauction_increase') -> long)))
+  oauction_bid_person: ListSizedStepped(HashInterval(0,5), LongFlow(HashRange(1,TEMPLATE(personcount))))
   ouaction_current: Expr('oauction_bid')
-  oauction_bidder: ListSizedStepped(HashInterval(0,5), LongFlow(HashRange(1,TEMPLATE(personcount))))
-  oauction_author: Add(300); HashRange(1,TEMPLATE(personcount))
+  oauction_author: Add(310); HashRange(1,TEMPLATE(personcount))
   
 blocks:
 
@@ -245,7 +245,7 @@ blocks:
           bidder: {
             __foreach: {
               increase: "{oauction_bid_values}",
-              person: "{oauction_bidder}"
+              person: "{oauction_bid_person}"
             },
             increase: "[increase]",
             personref: {

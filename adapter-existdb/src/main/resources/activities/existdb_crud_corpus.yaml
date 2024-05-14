@@ -2,8 +2,8 @@
 description: |
   This workload generates CRUD operations for direct access to an xmldb: database (eXist-db in the first instance).
   It was derived ultimately from the existing CRUD Basic workflow examples in nb5.
-  The write phase simulates the generation of user entries.
-  It is only partial; create and write are implemented. Read, update and delete are not yet supplied.
+  The write phase simulates the generation of entries in a linguistic corpus.
+  It is only partly converted; create and write are implemented. Read, update and delete are not converted.
 
 scenarios:
   default:
@@ -11,12 +11,21 @@ scenarios:
     schema:   run driver=existdb tags==block:"schema.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
     # different ops in the "write" schema occur on intervals, at the ratios declared by the ops
-    write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,1000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+    write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,100000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
     
     # read:     run driver=existdb tags==block:"read.*",  cycles===TEMPLATE(read-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
     # update:   run driver=existdb tags==block:"update.*", cycles===TEMPLATE(update-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
     # delete:   run driver=existdb tags==block:"delete.*", cycles===TEMPLATE(delete-cycles,TEMPLATE(docscount,10)) threads=auto errors=timer,warn
  
+  create:
+    schema:   run driver=existdb tags==block:"schema.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+
+  debugstdout:
+    dbgwrite:    run driver=stdout tags==block:"dbgwrite.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10)) seq=interval threads=auto errors=timer,warn
+
+  existdb:
+    write:    run driver=existdb tags==block:"write.*", cycles===TEMPLATE(write-cycles,TEMPLATE(docscount,10000)) seq=interval threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+
 bindings:
 
   collection: FixedValue(<<collection:"db">>) -> String
@@ -30,9 +39,6 @@ bindings:
   created_on: Uniform(1262304000,1577836800) -> long
   gender: WeightedStrings('M:10;F:10;O:1')
 
-  text: MobyDick()
-  alttext: WarAndPeace()
-  
   # The native FullNames() method doesn't give us the same last name as LastNames()
   full_name: ListSized(FixedValue(2), FirstNames(), LastNames()); Join(' ')
   married: ModuloToBoolean()
@@ -85,24 +91,26 @@ blocks:
 
           import module namespace xmldb="http://exist-db.org/xquery/xmldb";
 
-          declare namespace ppl = "https://evolvedbinary.co.uk/people/";
+          declare namespace dasg = "https://dasg.ac.uk/corpus/";
 
           let $mylogin := xmldb:login("/{collection}", "{user}", "{pass}")
 
           let $record :=
-            <person id="{user_id}" seq="{seq_key}" creation="{created_on}">
-              <name>{full_name}</name>
-              <family>
-                <gender>{gender}</gender>
-                <married>{married}</married>
-              </family>
-              <address>
-                <city>{city}</city>
-                <country>{country_code}</country>
-                <location lat="{lat}" lng="{lng}"/>
-              </address>
-              <text>{text}</text>
-            </person>
+            <text xmlns="https://dasg.ac.uk/corpus/" ref="https://dasg.ac.uk/corpus/_8-0" status="raw" seq="{seq_key}" user="{user_id}">
+              <pb n="5"/>
+              <h>
+                <w id="d1e1067" pos="ax" lemma="ro">RO</w>
+                <pc join="both">-</pc>
+                <w id="d1e1073" pos="vn" lemma="abair">RADH</w>
+              </h>
+              <p>
+                <w id="d1e1079" pos="p" lemma="bho">Bho</w>
+                <w id="d1e1082" pos="V" lemma="rach">chaidh</w>
+                <w id="d1e1085" pos="N" lemma="Hiort">Hiort</w>
+                <w id="d1e1088" pos="" lemma="fhàsachadh">fhàsachadh</w>
+                <w id="d1e1091" pos="p" lemma="an">ann an</w>
+              </p>
+            </text>
 
           return
             xmldb:store("/db/testnb/alpha", "{random_key}", $record)
@@ -116,15 +124,22 @@ blocks:
 
           import module namespace xmldb="http://exist-db.org/xquery/xmldb";
 
-          declare namespace ppl = "https://evolvedbinary.co.uk/people/";
+          declare namespace dasg = "https://dasg.ac.uk/corpus/";
 
           let $mylogin := xmldb:login("/{collection}", "{user}", "{pass}")
 
           let $record :=
-            <person id="{user_id}" seq="{seq_key}">
-              <name>John Doe</name>
-              <text>{alttext}</text>
-            </person>
+            <text xmlns="https://dasg.ac.uk/corpus/" ref="https://dasg.ac.uk/corpus/_8-0" status="raw" seq="{seq_key}" user="{user_id}">
+              <pb n="5"/>
+              <h>
+                <w id="d1e1067" pos="ax" lemma="ro">RO</w>
+                <pc join="both">-</pc>
+                <w id="d1e1073" pos="vn" lemma="abair">RADH</w>
+              </h>
+              <p>
+                <w id="d1e1079" pos="p" lemma="bho">air</w>
+              </p>
+            </text>
 
           return
             xmldb:store("/db/testnb/beta", "{random_key}", $record)
@@ -132,14 +147,57 @@ blocks:
   read:
     ops:
       read-document: >2
-        "the read-document op is not yet implemented"
+        {
+          find: "<<collection:crud_basic>>",
+          filter: { _id: "{random_key}" }
+        }        
 
   update:
     ops:
       update-document: >2
-        "the update-document op is not yet implemented"
+        {
+          update: "<<collection:crud_basic>>",
+          writeConcern: { w: "majority" },
+          updates: [
+            {
+              q: { _id: "{random_key}" },
+              u: {
+                "_id":          "{seq_key}",
+                "user_id":      "{user_id}",
+                "created_on":   {created_on},
+                "gender":       "{gender}",
+                "full_name":    "{full_name}",
+                "married":      {married},
+                "address": {
+                  "primary": {
+                    "city":   "{city}",
+                    "cc":     "{country_code}"
+                  },
+                  "secondary":  {}
+                },
+                "coordinates": [
+                  {lat},
+                  {lng}
+                ],
+                "children": [],
+                "friends": [
+                  "{friend_id}"
+                ],
+                "debt": null
+              }
+            }
+          ]
+        }        
 
   delete:
     ops:
       delete-document: >2
-        "the delete-document op is not yet implemented"
+        {
+          delete: "<<collection:crud_basic>>",
+          deletes: [
+            {
+              q: { _id: "{seq_key}" },
+              limit: 1
+            }
+          ]
+        }
