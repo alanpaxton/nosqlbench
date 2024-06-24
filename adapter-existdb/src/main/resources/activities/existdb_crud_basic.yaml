@@ -30,7 +30,7 @@ bindings:
   created_on: Uniform(1262304000,1577836800) -> long
   gender: WeightedStrings('M:10;F:10;O:1')
 
-  text: MobyDick()
+  text: WarAndPeace()
   alttext: WarAndPeace()
   
   # The native FullNames() method doesn't give us the same last name as LastNames()

@@ -7,7 +7,7 @@ into existdb.
 
 We can build the whole of `nb5` slowly, once, installing the components in our local maven repo
 ```
-$ mnv clean install
+$ mnv -DskipTests=true clean install
 ```
 Now for as long as we only develop on our own adapter, we can just rebuild/re-install the adapter
 and package it (and verify the package) this way, and we can run again much quicker
