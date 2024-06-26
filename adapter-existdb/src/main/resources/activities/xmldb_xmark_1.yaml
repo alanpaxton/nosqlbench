@@ -30,7 +30,7 @@ bindings:
   activities: FixedValue(TEMPLATE(activities,"adapter-existdb/target/classes/activities")) -> String
 
   cycleNum: Identity();
-  personNum: Identity(); HashRange(0,TEMPLATE(personcount,25000));
+  personNum: Identity(); HashRange(0,TEMPLATE(personcount));
 
 blocks:
 
@@ -72,7 +72,8 @@ blocks:
         import module namespace xmldb="http://exist-db.org/xquery/xmldb";
 
         let $mylogin := xmldb:login("/{collection}", "{user}", "{pass}")
-        let $docs := xmldb:store-files-from-pattern("/{collection}/auction/xmlgen2", "{path}/{activities}", "auction-xmlgen2-f1.xml")
+        let $indexes := xmldb:store-files-from-pattern("/{collection}/system/config/{collection}", "{path}/{activities}", "collection.xconf")
+        let $docs := xmldb:store-files-from-pattern("/{collection}/auction/xmlgen2", "{path}/{activities}", "TEMPLATE(auctionfile)")
         return $docs
 
   read:
