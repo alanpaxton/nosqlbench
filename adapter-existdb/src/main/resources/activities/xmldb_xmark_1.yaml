@@ -19,6 +19,7 @@ scenarios:
     install:   run driver=existdb tags==block:"install.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
     # Repeat the read n times (total), with m concurrent threads
+    warmup:     run driver=existdb tags==block:"read.*",  cycles===TEMPLATE(warmup-cycles,5000) threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
     read:     run driver=existdb tags==block:"read.*",  cycles===TEMPLATE(read-cycles,10000) threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
 bindings:
