@@ -59,10 +59,9 @@ blocks:
 
         let $create-collection := xmldb:create-collection("/{collection}", "auction")
         let $create-collection-xmlgen := xmldb:create-collection("/{collection}/auction", "xmlgen")
-        let $create-collection-xmlgen2 := xmldb:create-collection("/{collection}/auction", "xmlgen2")
 
         return
-          ($create-collection-xmlgen, $create-collection-xmlgen2)
+          $create-collection-xmlgen
 
   install:
     ops:
@@ -73,7 +72,7 @@ blocks:
 
         let $mylogin := xmldb:login("/{collection}", "{user}", "{pass}")
         let $indexes := xmldb:store-files-from-pattern("/{collection}/system/config/{collection}", "{path}/{activities}", "collection.xconf")
-        let $docs := xmldb:store-files-from-pattern("/{collection}/auction/xmlgen2", "{path}/{activities}", "TEMPLATE(auctionfile)")
+        let $docs := xmldb:store-files-from-pattern("/{collection}/auction/xmlgen", "{path}/{activities}", "TEMPLATE(auctionfile)")
         return $docs
 
   read:
