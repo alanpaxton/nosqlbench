@@ -4,23 +4,34 @@ description: |
   # Debug exist-db/startup.sh by adding this to java invocation:
   #     -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=127.0.01:4005
   # Run using this command:
-  #     java -jar ./nb5/target/nb5.jar ./adapter-existdb/target/classes/activities/xmldb_xmark_1.yaml
+  # java -jar <<jarfile>> <<this-file>> <<scenario>> [<<scenario>>*] <<paramname>>=<<paramvalue>>*
+  # for example
+  # java -jar ./nb5/target/nb5.jar ./adapter-existdb/target/classes/activities/xmldb_xmark.yaml xmark001 personcount=25000 auctionfile="auction-xmlgen2-f1.xml"
 
 scenarios:
+  clean:
+    # existdb driver is effectively a generic xmldb driver
+    schema:   run driver=existdb tags==block:"schema.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+
   reset:
     # existdb driver is effectively a generic xmldb driver
     schema:   run driver=existdb tags==block:"schema.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
-
-  default:
-    # existdb driver is effectively a generic xmldb driver
-    schema:   run driver=existdb tags==block:"schema.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
-
-    # existdb driver is effectively a generic xmldb driver
     install:   run driver=existdb tags==block:"install.*" threads==1 cycles==UNDEF endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
+  xmark001:
     # Repeat the read n times (total), with m concurrent threads
-    warmup:     run driver=existdb tags==block:"read.*",  cycles===TEMPLATE(warmup-cycles,5000) threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
-    read:     run driver=existdb tags==block:"read.*",  cycles===TEMPLATE(read-cycles,10000) threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+    warmup:     run driver=existdb tags==block:"xmark001.*",  cycles===TEMPLATE(warmup-cycles,5000) threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+    read:     run driver=existdb tags==block:"xmark001.*",  cycles===TEMPLATE(read-cycles,10000) threads=auto errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+
+  xmark002:
+    # Single threaded
+    warmup:     run driver=existdb tags==block:"xmark002.*",  cycles===TEMPLATE(warmup-cycles,5) threads=1 errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+    read:     run driver=existdb tags==block:"xmark002.*",  cycles===TEMPLATE(read-cycles,10) threads=1 errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+
+  xmark003:
+    # Single threaded
+    warmup:     run driver=existdb tags==block:"xmark003.*",  cycles===TEMPLATE(warmup-cycles,5) threads=1 errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
+    read:     run driver=existdb tags==block:"xmark003.*",  cycles===TEMPLATE(read-cycles,10) threads=1 errors=timer,warn endpoint=xmldb:exist://localhost:8080/exist/xmlrpc
 
 bindings:
 
@@ -76,12 +87,32 @@ blocks:
         let $docs := xmldb:store-files-from-pattern("/{collection}/auction/xmlgen", "{path}/{activities}", "TEMPLATE(auctionfile)")
         return $docs
 
-  read:
+  xmark001:
     ops:
-      xmark-001:
+      # rename this op to read when you want to use it
+      # nosqlbench doesn't let you called named scenarios in random files
+      # otherwise we could put a scenario for every XMark query
+      query:
         xquery version "3.1";
 
         for $b in /site/people/person[@id="person{personNum}"]
         return $b/name/text()
 
-        
+  xmark002:
+    ops:
+      query:
+        xquery version "3.1";
+
+        for $b in /site/open_auctions/open_auction
+        return <increase>{$b/bidder[1]/increase/text()}</increase>
+
+  xmark003:
+    ops:
+      query:
+        xquery version "3.1";
+
+        for $b in /site/open_auctions/open_auction
+        where $b/bidder[1]/increase/text() * 2 <= $b/bidder[last()]/increase/text()
+        return <increase first="{$b/bidder[1]/increase/text()}" last="{$b/bidder[last()]/increase/text()}" />
+
+
